@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flomble</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gap:8px;--pad:16px;--lc:4;
+  --card:calc((min(100vw,640px) - var(--pad)*2 - (var(--lc) - 1)*var(--gap)) / var(--lc));
+  --r:clamp(10px,2vw,16px);
+}
+body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;color:#fff;
+  min-height:100vh;min-height:100dvh;overflow-x:hidden;position:relative;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);}
+
+/* ── Blobs ── */
+.blob{position:fixed;border-radius:50%;pointer-events:none;z-index:0}
+.b1{width:50vmax;height:50vmax;background:radial-gradient(circle,#007AFF 0%,transparent 70%);opacity:.10;top:-18vmax;left:-14vmax}
+.b2{width:44vmax;height:44vmax;background:radial-gradient(circle,#BF5AF2 0%,transparent 70%);opacity:.09;bottom:-14vmax;right:-10vmax}
+.b3{width:26vmax;height:26vmax;background:radial-gradient(circle,#FF375F 0%,transparent 70%);opacity:.07;top:45%;left:55%}
+
+/* ── Screens ── */
+.screen{display:none;flex-direction:column;align-items:center;
+  min-height:100vh;min-height:100dvh;padding:var(--pad);
+  padding-top:max(var(--pad),env(safe-area-inset-top,0px));
+  padding-bottom:max(var(--pad),env(safe-area-inset-bottom,0px));
+  position:relative;z-index:1}
+.screen.active{display:flex}
+
+/* ══ MAP SCREEN ══ */
+.map-header{width:100%;max-width:600px;display:flex;justify-content:space-between;
+  align-items:center;margin-bottom:20px}
+.map-title{font-size:.7rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
+.map-total-stars{font-size:.8rem;color:rgba(255,255,255,.35);letter-spacing:.5px}
+.map-total-stars b{color:#FFD60A;font-weight:700}
+
+.map-scroll{width:100%;max-width:600px;display:flex;flex-direction:column;gap:20px;padding-bottom:20px}
+
+.chapter{display:flex;flex-direction:column;gap:8px}
+.chapter-label{font-size:.62rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.18);padding:0 2px;margin-bottom:2px}
+.level-row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+
+.lvl-node{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;
+  border:1px solid rgba(255,255,255,.10);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+  box-shadow:0 4px 16px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);
+  transition:transform .18s,box-shadow .18s;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.lvl-node:active{transform:scale(.94)}
+.lvl-node.locked{opacity:.35;cursor:default;pointer-events:none}
+.lvl-node.completed{background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.06))}
+.lvl-node.speed{border-color:rgba(255,149,0,.35);box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(255,149,0,.08),inset 0 1px 0 rgba(255,255,255,.12)}
+.lvl-node.endless{border-color:rgba(191,90,242,.35);box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(191,90,242,.08),inset 0 1px 0 rgba(255,255,255,.12)}
+.lvl-node .lnum{font-size:.82rem;font-weight:800;color:rgba(255,255,255,.75);line-height:1}
+.lvl-node .lstars{font-size:.58rem;letter-spacing:1px;color:#FFD60A;line-height:1}
+.lvl-node .lbadge{position:absolute;top:4px;right:5px;font-size:.55rem;line-height:1;opacity:.7}
+.lvl-node.speed .lbadge{color:#FF9500;opacity:.9}
+.lvl-node.endless .lbadge{color:#BF5AF2;opacity:.9}
+.lvl-node.locked .lnum{color:rgba(255,255,255,.3)}
+.lvl-node.locked .lstars{color:rgba(255,255,255,.15)}
+
+/* ══ GAME SCREEN ══ */
+.game-top{width:100%;display:flex;align-items:center;gap:10px;margin-bottom:16px;max-width:640px}
+.btn-back{width:36px;height:36px;flex-shrink:0;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:1rem;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.game-info{flex:1;display:flex;flex-direction:column;gap:1px}
+.game-level{font-size:.65rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.28)}
+.game-badge{font-size:.68rem;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.5px}
+.game-badge.speed{color:#FF9500}
+.game-badge.endless{color:#BF5AF2}
+.game-stats{display:flex;gap:6px;flex-shrink:0}
+.stat-pill{padding:6px 12px;border-radius:100px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  font-size:.72rem;font-weight:600;color:rgba(255,255,255,.55);
+  display:flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.stat-pill b{color:rgba(255,255,255,.82);font-weight:700}
+.stat-pill.urgency{border-color:rgba(255,80,80,.4);color:rgba(255,120,120,.8)}
+.stat-pill.urgency b{color:#FF3B30}
+
+/* Preview overlay */
+.preview-banner{position:fixed;top:0;left:0;right:0;z-index:50;pointer-events:none;
+  display:flex;justify-content:center;padding-top:max(56px,env(safe-area-inset-top,0px))}
+.preview-pill{padding:8px 18px;border-radius:100px;
+  background:rgba(255,214,10,.15);border:1px solid rgba(255,214,10,.3);
+  font-size:.72rem;font-weight:700;color:#FFD60A;letter-spacing:1px}
+
+/* Endless overlay bar */
+.endless-bar{width:100%;max-width:640px;height:4px;border-radius:2px;
+  background:rgba(255,255,255,.1);margin-bottom:12px;overflow:hidden}
+.endless-progress{height:100%;background:linear-gradient(90deg,#BF5AF2,#007AFF);
+  border-radius:2px;transition:width .5s linear;width:100%}
+
+/* ── Board ── */
+#board{display:grid;grid-template-columns:repeat(var(--lc),var(--card));gap:var(--gap);
+  touch-action:manipulation}
+
+/* Card */
+.card{width:var(--card);height:var(--card);perspective:600px;cursor:pointer;
+  -webkit-user-select:none;user-select:none}
+.card-inner{width:100%;height:100%;position:relative;
+  -webkit-transform-style:preserve-3d;transform-style:preserve-3d;
+  -webkit-transition:-webkit-transform .4s cubic-bezier(.34,1.4,.64,1);
+  transition:transform .4s cubic-bezier(.34,1.4,.64,1);will-change:transform}
+@media(hover:hover)and(pointer:fine){
+  .card:not(.flipped):not(.matched):hover .card-inner{
+    -webkit-transform:scale(1.06) translateY(-2px);transform:scale(1.06) translateY(-2px)}}
+.card.flipped .card-inner,.card.matched .card-inner{
+  -webkit-transform:rotateY(180deg);transform:rotateY(180deg)}
+.card-back,.card-front{position:absolute;inset:0;border-radius:var(--r);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden}
+.card-back{
+  background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+  -webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 5px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.17)}
+.card-back::before{content:'';position:absolute;top:0;left:10%;right:10%;height:40%;
+  background:linear-gradient(180deg,rgba(255,255,255,.10) 0%,transparent 100%);
+  border-radius:0 0 50% 50%;pointer-events:none}
+.card-back::after{content:'';position:absolute;inset:0;border-radius:var(--r);
+  background-image:radial-gradient(circle,rgba(255,255,255,.07) 1px,transparent 1px);
+  background-size:12px 12px;pointer-events:none}
+.card-front{-webkit-transform:rotateY(180deg);transform:rotateY(180deg);overflow:hidden;
+  box-shadow:0 8px 28px rgba(0,0,0,.5)}
+@keyframes shake{0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}40%{transform:translateX(5px)}
+  60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.card.shake{animation:shake .35s ease}
+@keyframes matchFlash{
+  0%{box-shadow:0 0 0 0 rgba(52,199,89,.7),0 8px 28px rgba(0,0,0,.5)}
+  40%{box-shadow:0 0 0 10px rgba(52,199,89,.12),0 8px 28px rgba(0,0,0,.5)}
+  100%{box-shadow:0 0 0 2px rgba(52,199,89,.5),0 4px 14px rgba(0,0,0,.3)}}
+.card.matched .card-front{opacity:.28;-webkit-animation:matchFlash .5s ease forwards;animation:matchFlash .5s ease forwards}
+.swatch{width:100%;height:100%;border-radius:var(--r)}
+.name-wrap{width:100%;height:100%;border-radius:var(--r);display:flex;align-items:center;justify-content:center;padding:6px}
+.name-text{font-weight:800;font-size:clamp(.52rem,1.5vw,.72rem);text-align:center;
+  line-height:1.2;letter-spacing:.4px;text-transform:uppercase;font-family:-apple-system,sans-serif}
+.name-text.long{font-size:clamp(.44rem,1.2vw,.6rem);letter-spacing:.1px}
+@media(max-width:499px){.name-text{font-size:clamp(.56rem,2.2vw,.7rem)}.name-text.long{font-size:clamp(.48rem,1.9vw,.6rem)}}
+
+/* hint */
+.game-hint{margin-top:14px;font-size:clamp(.58rem,1.4vw,.68rem);color:rgba(255,255,255,.16);text-align:center;line-height:1.8}
+.game-hint span{color:rgba(255,255,255,.26)}
+
+/* ══ RESULT SCREEN ══ */
+.result-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;gap:0;width:100%;max-width:400px}
+.result-glass{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  border-radius:28px;padding:36px 44px;width:100%;display:flex;flex-direction:column;
+  align-items:center;gap:10px;
+  box-shadow:0 32px 64px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.2);position:relative;overflow:hidden}
+.result-glass::before{content:'';position:absolute;top:0;left:15%;right:15%;height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,transparent 100%);
+  border-radius:0 0 60% 60%;pointer-events:none}
+.result-glass.sr-failed{border-color:rgba(255,59,48,.28);background:rgba(255,30,20,.06)}
+.result-glass.sr-failed::before{background:linear-gradient(180deg,rgba(255,59,48,.07) 0%,transparent 100%)}
+.result-level{font-size:.65rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.3);position:relative}
+.result-title{font-size:1.7rem;font-weight:800;color:#fff;letter-spacing:-1px;position:relative}
+.result-stars{display:flex;gap:8px;margin:8px 0;position:relative}
+@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}
+  60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+.star-icon{font-size:2.2rem;opacity:0;display:inline-block}
+.star-icon.earned{-webkit-animation:starPop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+  animation:starPop .5s cubic-bezier(.34,1.56,.64,1) forwards}
+.star-icon:nth-child(1){animation-delay:.1s}
+.star-icon:nth-child(2){animation-delay:.3s}
+.star-icon:nth-child(3){animation-delay:.5s}
+.result-stats{font-size:.8rem;color:rgba(255,255,255,.4);text-align:center;position:relative;line-height:1.7}
+.result-stats b{color:rgba(255,255,255,.7)}
+.sr-fail-notice{padding:5px 14px;border-radius:100px;background:rgba(255,59,48,.1);
+  border:1px solid rgba(255,59,48,.22);color:rgba(255,85,75,.65);
+  font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;position:relative}
+.result-btns{display:flex;gap:10px;margin-top:18px;position:relative;width:100%}
+.rbtn{flex:1;padding:12px 0;border-radius:100px;cursor:pointer;font-size:.82rem;
+  font-family:inherit;font-weight:600;letter-spacing:.3px;border:none;
+  touch-action:manipulation;transition:transform .18s,opacity .18s}
+.rbtn:active{transform:scale(.95);opacity:.8}
+.rbtn.primary{background:#007AFF;color:#fff;box-shadow:0 6px 18px rgba(0,122,255,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+.rbtn.secondary{background:rgba(255,255,255,.09);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12)}
+
+/* ══ SPEED RUN INTRO ══ */
+#sr-intro{position:fixed;inset:0;z-index:200;
+  background:radial-gradient(ellipse at 50% 42%,rgba(255,149,0,.14) 0%,rgba(6,6,14,.97) 62%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  overflow:hidden;cursor:pointer}
+.sr-bolt{font-size:3.2rem;line-height:1;
+  filter:drop-shadow(0 0 28px rgba(255,149,0,.8)) drop-shadow(0 0 10px rgba(255,149,0,.5))}
+.sr-badge-el{font-size:.63rem;font-weight:900;letter-spacing:8px;text-transform:uppercase;
+  color:#FF9500;padding:6px 22px;border:1px solid rgba(255,149,0,.42);border-radius:100px;
+  background:rgba(255,149,0,.09);box-shadow:0 0 24px rgba(255,149,0,.1)}
+.sr-lnum-el{font-size:3.8rem;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1}
+.sr-rule-el{font-size:.86rem;color:rgba(255,255,255,.4);text-align:center;line-height:2;
+  border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);
+  padding:14px 28px}
+.sr-rule-el strong{color:rgba(255,255,255,.78);font-weight:700}
+.sr-cd-el{font-size:5.5rem;font-weight:900;color:#FF9500;line-height:1;
+  text-shadow:0 0 60px rgba(255,149,0,.55),0 0 18px rgba(255,149,0,.3);
+  min-width:2ch;text-align:center}
+.sr-cd-el.go{color:#30D158;font-size:3rem;letter-spacing:-1px;
+  text-shadow:0 0 60px rgba(48,209,88,.55),0 0 18px rgba(48,209,88,.3)}
+.sr-skip{position:absolute;bottom:max(32px,env(safe-area-inset-bottom,32px));
+  font-size:.58rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.13)}
+
+/* ══ ENDLESS INTRO ══ */
+#el-intro{position:fixed;inset:0;z-index:200;
+  background:radial-gradient(ellipse at 50% 42%,rgba(191,90,242,.17) 0%,rgba(6,6,14,.97) 62%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  overflow:hidden;cursor:pointer}
+.el-infinity{font-size:5rem;font-weight:900;color:#BF5AF2;line-height:1;
+  filter:drop-shadow(0 0 36px rgba(191,90,242,.85)) drop-shadow(0 0 14px rgba(191,90,242,.55))}
+.el-badge-el{font-size:.63rem;font-weight:900;letter-spacing:8px;text-transform:uppercase;
+  color:#BF5AF2;padding:6px 22px;border:1px solid rgba(191,90,242,.4);border-radius:100px;
+  background:rgba(191,90,242,.09);box-shadow:0 0 24px rgba(191,90,242,.1)}
+.el-lnum-el{font-size:3.8rem;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1}
+.el-rule-el{font-size:.86rem;color:rgba(255,255,255,.4);text-align:center;line-height:2;
+  border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);
+  padding:14px 28px}
+.el-rule-el strong{color:rgba(255,255,255,.78);font-weight:700}
+.el-hint-el{font-size:.68rem;color:rgba(191,90,242,.5);letter-spacing:.5px;text-align:center}
+.el-skip{position:absolute;bottom:max(32px,env(safe-area-inset-bottom,32px));
+  font-size:.58rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.13)}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<!-- MAP -->
+<div id="s-map" class="screen active">
+  <div class="map-header">
+    <div class="map-title">Flomble</div>
+    <div class="map-total-stars">Total <b id="total-stars">0</b>/150 ★</div>
+  </div>
+  <div class="map-scroll" id="map-scroll"></div>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="screen">
+  <div class="game-top">
+    <div class="btn-back" id="btn-back">←</div>
+    <div class="game-info">
+      <div class="game-level" id="glevel"></div>
+      <div class="game-badge" id="gbadge"></div>
+    </div>
+    <div class="game-stats">
+      <div class="stat-pill" id="gstat1"><b id="gs1v">0</b></div>
+      <div class="stat-pill" id="gstat2"><b id="gs2v">0:00</b></div>
+    </div>
+  </div>
+  <div class="endless-bar" id="endless-bar" style="display:none">
+    <div class="endless-progress" id="endless-prog"></div>
+  </div>
+  <div id="board"></div>
+  <p class="game-hint" id="ghint">Match the color block · <span>with the card showing the same color name</span></p>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="result-wrap">
+    <div class="result-glass">
+      <div class="result-level" id="rlevel"></div>
+      <div class="result-title" id="rtitle"></div>
+      <div class="result-stars" id="rstars">
+        <span class="star-icon" id="st1">⭐</span>
+        <span class="star-icon" id="st2">⭐</span>
+        <span class="star-icon" id="st3">⭐</span>
+      </div>
+      <div class="result-stats" id="rstats"></div>
+      <div id="sr-fail-notice" class="sr-fail-notice" style="display:none">⚡ Speed bonus lost</div>
+      <div class="result-btns">
+        <button class="rbtn secondary" id="rbtn-retry">Retry</button>
+        <button class="rbtn primary" id="rbtn-next">Continue →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SPEED RUN INTRO OVERLAY -->
+<div id="sr-intro">
+  <div class="sr-bolt">⚡</div>
+  <div id="sr-badge-el" class="sr-badge-el">SPEED RUN</div>
+  <div id="sr-lnum-el" class="sr-lnum-el"></div>
+  <div id="sr-rule-el" class="sr-rule-el"></div>
+  <div id="sr-cd-el" class="sr-cd-el">3</div>
+  <div class="sr-skip">Tap · Skip</div>
+</div>
+
+<!-- ENDLESS INTRO OVERLAY -->
+<div id="el-intro">
+  <div class="el-infinity" id="el-inf-el">∞</div>
+  <div id="el-badge-el" class="el-badge-el">ENDLESS MODE</div>
+  <div id="el-lnum-el" class="el-lnum-el"></div>
+  <div id="el-rule-el" class="el-rule-el"></div>
+  <div id="el-hint-el" class="el-hint-el"></div>
+  <div class="el-skip">Tap · Skip</div>
+</div>
+
+<div class="preview-banner" id="preview-banner" style="display:none">
+  <div class="preview-pill" id="preview-text">Memorize!</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   COLORS
+═══════════════════════════════════════════ */
+const COLORS = [
+  {name:'Red',    hex:'#FF3B30'},
+  {name:'Orange', hex:'#FF9500'},
+  {name:'Yellow', hex:'#FFEA00'},
+  {name:'Green',  hex:'#30D158'},
+  {name:'Teal',   hex:'#00C7BE'},
+  {name:'Blue',   hex:'#007AFF'},
+  {name:'Purple', hex:'#BF5AF2'},
+  {name:'Pink',   hex:'#FF69B4'},
+  {name:'Brown',  hex:'#AC8E68'},
+  {name:'White',  hex:'#F2F2F7'},
+  {name:'Gray',   hex:'#8E8E93'},
+  {name:'Black',  hex:'#1C1C1E'},
+];
+const displayHex = i => COLORS[(i+5)%12].hex;
+
+/* ═══════════════════════════════════════════
+   50 LEVELS
+═══════════════════════════════════════════ */
+const LEVELS = [
+// ── Chapter 1: Beginner (1-10) ──
+  {p:3,t:6, pre:2000,fb:1000,cols:3,type:'n'}, // 1
+  {p:3,t:6, pre:2000,fb:1000,cols:3,type:'n'}, // 2
+  {p:4,t:8, pre:2000,fb:1000,cols:4,type:'n'}, // 3
+  {p:4,t:8, pre:1500,fb:1000,cols:4,type:'n'}, // 4
+  {p:3,t:6, pre:0,   fb:1000,cols:3,type:'s',tl:20}, // 5 SPEED
+  {p:3,t:8, pre:1500,fb:1000,cols:4,type:'n'}, // 6
+  {p:4,t:8, pre:1500,fb:1000,cols:4,type:'n'}, // 7
+  {p:5,t:12,pre:1500,fb:1000,cols:4,type:'n'}, // 8
+  {p:4,t:12,pre:1000,fb:1000,cols:4,type:'n'}, // 9
+  {p:4,t:8, pre:0,   fb:1000,cols:4,type:'s',tl:26}, // 10 SPEED
+
+// ── Chapter 2: Intermediate (11-20) ──
+  {p:6,t:12,pre:1000,fb:950, cols:4,type:'n'}, // 11
+  {p:5,t:12,pre:1000,fb:950, cols:4,type:'n'}, // 12
+  {p:6,t:12,pre:500, fb:950, cols:4,type:'n'}, // 13
+  {p:4,t:12,pre:500, fb:950, cols:4,type:'n'}, // 14
+  {p:12,t:24,pre:3000,fb:950,cols:6,type:'e',dur:75}, // 15 ENDLESS
+  {p:7,t:16,pre:500, fb:900, cols:4,type:'n'}, // 16
+  {p:8,t:16,pre:500, fb:900, cols:4,type:'n'}, // 17
+  {p:6,t:16,pre:500, fb:900, cols:4,type:'n'}, // 18
+  {p:8,t:16,pre:500, fb:900, cols:4,type:'n'}, // 19
+  {p:8,t:16,pre:0,   fb:900, cols:4,type:'s',tl:45}, // 20 SPEED
+
+// ── Chapter 3: Challenge (21-30) ──
+  {p:7,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 21
+  {p:8,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 22
+  {p:6,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 23
+  {p:8,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 24
+  {p:12,t:24,pre:2000,fb:850,cols:6,type:'e',dur:60}, // 25 ENDLESS
+  {p:9,t:20, pre:0,  fb:800, cols:4,type:'n'}, // 26
+  {p:10,t:20,pre:0,  fb:800, cols:4,type:'n'}, // 27
+  {p:8,t:20, pre:0,  fb:800, cols:4,type:'n'}, // 28
+  {p:10,t:20,pre:0,  fb:800, cols:4,type:'n'}, // 29
+  {p:10,t:20,pre:0,  fb:800, cols:4,type:'s',tl:58}, // 30 SPEED
+
+// ── Chapter 4: Expert (31-40) ──
+  {p:9, t:20,pre:0,  fb:750, cols:4,type:'n'}, // 31
+  {p:10,t:20,pre:0,  fb:750, cols:4,type:'n'}, // 32
+  {p:8, t:20,pre:0,  fb:750, cols:4,type:'n'}, // 33
+  {p:10,t:20,pre:0,  fb:750, cols:4,type:'n'}, // 34
+  {p:12,t:24,pre:1500,fb:750,cols:6,type:'e',dur:75}, // 35 ENDLESS
+  {p:11,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 36
+  {p:12,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 37
+  {p:10,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 38
+  {p:12,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 39
+  {p:12,t:24,pre:0,  fb:700, cols:6,type:'s',tl:70}, // 40 SPEED
+
+// ── Chapter 5: Legend (41-50) ──
+  {p:11,t:24,pre:0,  fb:650, cols:6,type:'n'}, // 41
+  {p:12,t:24,pre:0,  fb:650, cols:6,type:'n'}, // 42
+  {p:9, t:24,pre:0,  fb:650, cols:6,type:'n'}, // 43
+  {p:12,t:24,pre:0,  fb:650, cols:6,type:'n'}, // 44
+  {p:12,t:24,pre:1000,fb:650,cols:6,type:'e',dur:90}, // 45 ENDLESS
+  {p:12,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 46
+  {p:10,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 47
+  {p:12,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 48
+  {p:8, t:24,pre:0,  fb:600, cols:6,type:'n'}, // 49
+  {p:12,t:24,pre:0,  fb:550, cols:6,type:'s',tl:75}, // 50 SPEED FINAL
+];
+
+const CHAPTERS = [
+  {label:'Chapter 1 · Beginner',     range:[0,9]},
+  {label:'Chapter 2 · Intermediate', range:[10,19]},
+  {label:'Chapter 3 · Challenge',    range:[20,29]},
+  {label:'Chapter 4 · Expert',       range:[30,39]},
+  {label:'Chapter 5 · Legend',       range:[40,49]},
+];
+
+/* ═══════════════════════════════════════════
+   PROGRESS
+═══════════════════════════════════════════ */
+function loadProgress(){
+  try{return JSON.parse(localStorage.getItem('cf-prog'))||new Array(50).fill(0)}
+  catch{return new Array(50).fill(0)}
+}
+function saveProgress(idx,stars){
+  if(stars > progress[idx]) progress[idx]=stars;
+  try{localStorage.setItem('cf-prog',JSON.stringify(progress))}catch{}
+}
+let progress = loadProgress();
+
+function isUnlocked(i){return i===0||progress[i-1]>=1}
+function totalStars(){return progress.reduce((a,b)=>a+b,0)}
+
+/* ═══════════════════════════════════════════
+   SCREEN MANAGER
+═══════════════════════════════════════════ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ═══════════════════════════════════════════
+   MAP
+═══════════════════════════════════════════ */
+function renderMap(){
+  document.getElementById('total-stars').textContent = totalStars();
+  const scroll = document.getElementById('map-scroll');
+  scroll.innerHTML='';
+  CHAPTERS.forEach(ch=>{
+    const sec = document.createElement('div');
+    sec.className='chapter';
+    const lbl = document.createElement('div');
+    lbl.className='chapter-label';
+    lbl.textContent=ch.label;
+    sec.appendChild(lbl);
+    for(let row=0;row<2;row++){
+      const rowEl=document.createElement('div');
+      rowEl.className='level-row';
+      for(let c=0;c<5;c++){
+        const i=ch.range[0]+row*5+c;
+        const lv=LEVELS[i];
+        const unlocked=isUnlocked(i);
+        const stars=progress[i];
+        const node=document.createElement('div');
+        const typeClass = lv.type==='s' ? ' speed' : lv.type==='e' ? ' endless' : '';
+        node.className='lvl-node'+typeClass+(unlocked?stars>0?' completed':'':' locked');
+        const badge = lv.type==='s'?'⚡':lv.type==='e'?'∞':'';
+        const starStr = unlocked
+          ? (stars===3?'★★★':stars===2?'★★☆':stars===1?'★☆☆':'☆☆☆')
+          : '🔒';
+        node.innerHTML=`<div class="lnum">${i+1}</div><div class="lstars">${starStr}</div>${badge?`<div class="lbadge">${badge}</div>`:''}`;
+        if(unlocked) node.addEventListener('click',()=>startLevel(i));
+        rowEl.appendChild(node);
+      }
+      sec.appendChild(rowEl);
+    }
+    scroll.appendChild(sec);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   GAME STATE
+═══════════════════════════════════════════ */
+let G = {};
+
+function lum(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return .299*r+.587*g+.114*b;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function setCols(n){
+  const eff = (n===6 && window.innerWidth<540) ? 4 : n;
+  const card = Math.floor((Math.min(window.innerWidth, 640) - 32 - (eff - 1) * 8) / eff);
+  document.documentElement.style.setProperty('--lc', eff);
+  document.documentElement.style.setProperty('--card', card + 'px');
+}
+
+/* ═══════════════════════════════════════════
+   START LEVEL
+═══════════════════════════════════════════ */
+function startLevel(idx){
+  if(G.flipBackTimer) clearTimeout(G.flipBackTimer);
+  const lv=LEVELS[idx];
+  G={
+    idx,lv,
+    flipped:[],matched:new Set(),moves:0,lock:false,
+    startTime:null,elapsed:0,timerInterval:null,
+    previewing:false,
+    endlessScore:0,endlessTimeLeft:lv.dur||0,endlessTimer:null,
+    speedTimeLeft:lv.tl||0,speedTimer:null,
+    introTimeline:null,
+    flipBackTimer:null,
+  };
+  setCols(lv.cols);
+
+  const badgeEl = document.getElementById('gbadge');
+  document.getElementById('glevel').textContent=`Level ${idx+1}`;
+  if(lv.type==='s'){
+    badgeEl.textContent='⚡ Speed Run';
+    badgeEl.className='game-badge speed';
+  } else if(lv.type==='e'){
+    badgeEl.textContent='∞ Endless Mode';
+    badgeEl.className='game-badge endless';
+  } else {
+    badgeEl.textContent='Normal';
+    badgeEl.className='game-badge';
+  }
+
+  if(lv.type==='s'){
+    document.getElementById('gstat1').innerHTML='⏱ <b id="gs1v">'+lv.tl+'</b>s';
+    document.getElementById('gstat2').innerHTML='Moves <b id="gs2v">0</b>';
+  } else if(lv.type==='e'){
+    document.getElementById('gstat1').innerHTML='⏳ <b id="gs1v">'+lv.dur+'</b>s';
+    document.getElementById('gstat2').innerHTML='Pairs <b id="gs2v">0</b>';
+  } else {
+    document.getElementById('gstat1').innerHTML='Moves <b id="gs1v">0</b>';
+    document.getElementById('gstat2').innerHTML='Time <b id="gs2v">0:00</b>';
+  }
+
+  document.getElementById('endless-bar').style.display = lv.type==='e' ? 'block':'none';
+  document.getElementById('endless-prog').style.width='100%';
+  gsap.set('#endless-prog',{background:'linear-gradient(90deg,#BF5AF2,#007AFF)'});
+  document.getElementById('ghint').style.display = lv.type==='e' ? 'none':'';
+
+  buildBoard();
+  show('s-game');
+
+  if(lv.type==='s'){
+    G.lock=true;
+    showSpeedRunIntro(idx, ()=>{
+      G.lock=false;
+      startSpeedTimer();
+    });
+  } else if(lv.type==='e'){
+    G.lock=true;
+    showEndlessIntro(idx, ()=>{
+      G.lock=false;
+      if(lv.pre>0) runPreview();
+    });
+  } else if(lv.pre>0){
+    runPreview();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   SPEED RUN INTRO
+═══════════════════════════════════════════ */
+function showSpeedRunIntro(idx, callback){
+  const lv = LEVELS[idx];
+  const overlay = document.getElementById('sr-intro');
+  const boltEl = overlay.querySelector('.sr-bolt');
+  const badgeEl = document.getElementById('sr-badge-el');
+  const lnumEl = document.getElementById('sr-lnum-el');
+  const ruleEl = document.getElementById('sr-rule-el');
+  const cdEl = document.getElementById('sr-cd-el');
+
+  lnumEl.textContent = `Level ${idx+1}`;
+  ruleEl.innerHTML = `Find <strong>${lv.p} pairs</strong> &nbsp;·&nbsp; Time: <strong>${lv.tl} seconds</strong>`;
+  cdEl.textContent = '3';
+  cdEl.className = 'sr-cd-el';
+
+  overlay.style.display = 'flex';
+  gsap.set(overlay, {opacity:0});
+  gsap.set(boltEl, {opacity:0, y:-40, scale:.6});
+  gsap.set(badgeEl, {opacity:0, y:-24, scale:.75});
+  gsap.set(lnumEl, {opacity:0, scale:.45});
+  gsap.set(ruleEl, {opacity:0, y:18});
+  gsap.set(cdEl, {opacity:0, scale:3.2});
+
+  const tl = gsap.timeline();
+  G.introTimeline = tl;
+
+  tl.to(overlay, {opacity:1, duration:.28})
+    .to(boltEl, {opacity:1, y:0, scale:1, duration:.52, ease:'back.out(2)'}, '-=.1')
+    .to(badgeEl, {opacity:1, y:0, scale:1, duration:.46, ease:'back.out(1.9)'}, '-=.22')
+    .to(lnumEl, {opacity:1, scale:1, duration:.42, ease:'back.out(2.4)'}, '-=.16')
+    .to(ruleEl, {opacity:1, y:0, duration:.36, ease:'power2.out'}, '-=.12')
+    .to({}, {duration:.38})
+    .to(cdEl, {opacity:1, scale:1, duration:.4, ease:'back.out(2.6)'})
+    .to({}, {duration:.62})
+    .to(cdEl, {opacity:0, scale:.5, duration:.15, ease:'power2.in'})
+    .call(()=>{ cdEl.textContent='2'; gsap.set(cdEl,{scale:2.2}); })
+    .to(cdEl, {opacity:1, scale:1, duration:.4, ease:'back.out(2.6)'})
+    .to({}, {duration:.62})
+    .to(cdEl, {opacity:0, scale:.5, duration:.15, ease:'power2.in'})
+    .call(()=>{ cdEl.textContent='1'; gsap.set(cdEl,{scale:2.2}); })
+    .to(cdEl, {opacity:1, scale:1, duration:.4, ease:'back.out(2.6)'})
+    .to({}, {duration:.62})
+    .to(cdEl, {opacity:0, scale:1.9, duration:.14, ease:'power2.in'})
+    .call(()=>{ cdEl.textContent='GO!'; cdEl.classList.add('go'); gsap.set(cdEl,{scale:.38}); })
+    .to(cdEl, {opacity:1, scale:1, duration:.48, ease:'elastic.out(1,.52)'})
+    .to({}, {duration:.42})
+    .to(overlay, {opacity:0, duration:.28, ease:'power2.in'})
+    .call(()=>{
+      overlay.style.display='none';
+      G.introTimeline=null;
+      callback();
+    });
+
+  overlay.addEventListener('click', function skip(){
+    overlay.removeEventListener('click', skip);
+    tl.kill();
+    G.introTimeline=null;
+    gsap.to(overlay, {opacity:0, duration:.2, ease:'power2.in', onComplete:()=>{
+      overlay.style.display='none';
+      callback();
+    }});
+  });
+}
+
+/* ═══════════════════════════════════════════
+   ENDLESS INTRO
+═══════════════════════════════════════════ */
+function showEndlessIntro(idx, callback){
+  const lv = LEVELS[idx];
+  const overlay = document.getElementById('el-intro');
+  const infEl = document.getElementById('el-inf-el');
+  const badgeEl = document.getElementById('el-badge-el');
+  const lnumEl = document.getElementById('el-lnum-el');
+  const ruleEl = document.getElementById('el-rule-el');
+  const hintEl = document.getElementById('el-hint-el');
+
+  lnumEl.textContent = `Level ${idx+1}`;
+  ruleEl.innerHTML = `Find <strong>${lv.p} pairs</strong> &nbsp;·&nbsp; <strong>${lv.dur} seconds</strong><br>Board resets when all pairs are found`;
+  hintEl.textContent = lv.pre > 0
+    ? '★  Memorize the cards — timer starts after'
+    : '★  Timer starts on your first flip';
+
+  overlay.style.display = 'flex';
+  gsap.set(overlay, {opacity:0});
+  gsap.set(infEl, {opacity:0, scale:.1, rotation:-120});
+  gsap.set(badgeEl, {opacity:0, y:-20, scale:.8});
+  gsap.set(lnumEl, {opacity:0, scale:.5});
+  gsap.set(ruleEl, {opacity:0, y:18});
+  gsap.set(hintEl, {opacity:0, y:10});
+
+  const pulse = gsap.to(infEl, {
+    scale:1.1, duration:1.5, ease:'sine.inOut', repeat:-1, yoyo:true, paused:true
+  });
+
+  const tl = gsap.timeline();
+  G.introTimeline = tl;
+
+  tl.to(overlay, {opacity:1, duration:.3})
+    .to(infEl, {opacity:1, scale:1, rotation:0, duration:.78, ease:'back.out(1.6)'}, '-=.1')
+    .call(()=>pulse.play())
+    .to(badgeEl, {opacity:1, y:0, scale:1, duration:.46, ease:'back.out(1.9)'}, '-=.3')
+    .to(lnumEl, {opacity:1, scale:1, duration:.42, ease:'back.out(2.2)'}, '-=.18')
+    .to(ruleEl, {opacity:1, y:0, duration:.38, ease:'power2.out'}, '-=.14')
+    .to(hintEl, {opacity:1, y:0, duration:.34, ease:'power2.out'}, '-=.1')
+    .to({}, {duration:.95})
+    .to(overlay, {opacity:0, duration:.3, ease:'power2.in'})
+    .call(()=>{
+      pulse.kill();
+      overlay.style.display='none';
+      G.introTimeline=null;
+      callback();
+    });
+
+  overlay.addEventListener('click', function skip(){
+    overlay.removeEventListener('click', skip);
+    pulse.kill();
+    tl.kill();
+    G.introTimeline=null;
+    gsap.to(overlay, {opacity:0, duration:.2, ease:'power2.in', onComplete:()=>{
+      overlay.style.display='none';
+      callback();
+    }});
+  });
+}
+
+/* ═══════════════════════════════════════════
+   PARTICLE BURST
+═══════════════════════════════════════════ */
+function burstParticles(){
+  const container = document.getElementById('s-result');
+  const starsEl = document.getElementById('rstars');
+  const sr = starsEl.getBoundingClientRect();
+  const cr = container.getBoundingClientRect();
+  const cx = sr.left - cr.left + sr.width/2;
+  const cy = sr.top - cr.top + sr.height/2;
+  const colors = ['#FFD60A','#FF9500','#FF3B30','#30D158','#007AFF','#BF5AF2','#FF69B4'];
+
+  for(let i=0;i<50;i++){
+    const p = document.createElement('div');
+    const sz = 4+Math.random()*8;
+    const angle = Math.random()*Math.PI*2;
+    const dist = 70+Math.random()*160;
+    p.style.cssText = `position:absolute;width:${sz}px;height:${sz}px;
+      border-radius:${Math.random()>.4?'50%':'3px'};
+      background:${colors[i%colors.length]};
+      left:${cx - sz/2}px;top:${cy - sz/2}px;
+      pointer-events:none;z-index:20;`;
+    container.appendChild(p);
+    gsap.to(p, {
+      x: Math.cos(angle)*dist,
+      y: Math.sin(angle)*dist + 30+Math.random()*60,
+      opacity: 0,
+      scale: .2+Math.random()*.8,
+      duration: .75+Math.random()*.55,
+      ease: 'power2.out',
+      delay: Math.random()*.14,
+      onComplete: ()=>p.remove()
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   BUILD BOARD
+═══════════════════════════════════════════ */
+function buildBoard(){
+  const lv=G.lv;
+  const board=document.getElementById('board');
+  board.innerHTML='';
+  G.matched=new Set();
+  G.flipped=[];
+
+  const colorIndices=shuffle([...Array(12).keys()]).slice(0,lv.p);
+  G.colorIndices=colorIndices;
+
+  const cards=[];
+  colorIndices.forEach(ci=>{
+    cards.push({ci,kind:'swatch'});
+    cards.push({ci,kind:'name'});
+  });
+  const decoys=lv.t - lv.p*2;
+  for(let d=0;d<decoys;d++) cards.push({ci:-1,kind:'decoy'});
+  shuffle(cards);
+
+  cards.forEach(c=>{
+    const el=document.createElement('div');
+    el.className='card'+(c.kind==='decoy'?' decoy':'');
+    el.dataset.ci=c.ci;
+    el.dataset.kind=c.kind;
+
+    let frontContent='';
+    if(c.kind==='swatch'){
+      const bg=COLORS[c.ci].hex;
+      const ring=lum(bg)>185?'box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.14);':'';
+      frontContent=`<div class="swatch" style="background:${bg};${ring}"></div>`;
+    } else if(c.kind==='name'){
+      const bg=displayHex(c.ci);
+      const tc=lum(bg)>145?'rgba(0,0,0,.78)':'rgba(255,255,255,.92)';
+      const lng=COLORS[c.ci].name.length > 6;
+      frontContent=`<div class="name-wrap" style="background:${bg}"><span class="name-text${lng?' long':''}" style="color:${tc}">${COLORS[c.ci].name}</span></div>`;
+    }
+
+    el.innerHTML=`<div class="card-inner"><div class="card-back"></div><div class="card-front">${frontContent}</div></div>`;
+    if(c.kind!=='decoy') el.addEventListener('click',()=>flip(el));
+    else el.addEventListener('click',()=>{
+      if(G.previewing) return;
+      eagerFlip();
+      if(G.lock) return;
+      if(!G.startTime && G.lv.type==='n'){G.startTime=Date.now();startElapsedTimer();}
+      if(G.lv.type==='s'&&!G.speedTimer) startSpeedTimer();
+      if(G.lv.type==='e'&&!G.endlessTimer) startEndlessTimer();
+      if(G.lv.type!=='e'){
+        G.moves++;
+        if(G.lv.type==='n') document.getElementById('gs1v').textContent=G.moves;
+        if(G.lv.type==='s') document.getElementById('gs2v').textContent=G.moves;
+      }
+      el.classList.add('shake');
+      el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true});
+    });
+    board.appendChild(el);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   EAGER FLIP
+═══════════════════════════════════════════ */
+function eagerFlip(){
+  if(G.lock && G.flipBackTimer !== null && G.flipped.length === 2){
+    clearTimeout(G.flipBackTimer);
+    G.flipBackTimer = null;
+    const [fa, fb] = G.flipped;
+    fa.classList.remove('flipped');
+    fb.classList.remove('flipped');
+    G.flipped = [];
+    G.lock = false;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PREVIEW
+═══════════════════════════════════════════ */
+function runPreview(){
+  G.previewing=true;
+  G.lock=true;
+  const banner=document.getElementById('preview-banner');
+  const txt=document.getElementById('preview-text');
+  banner.style.display='flex';
+
+  document.querySelectorAll('#board .card:not(.decoy)').forEach(c=>c.classList.add('flipped'));
+
+  let remaining=Math.ceil(G.lv.pre/1000);
+  txt.textContent=`Memorize! ${remaining}`;
+  const tick=setInterval(()=>{
+    remaining--;
+    txt.textContent=remaining>0?`Memorize! ${remaining}`:'Ready?';
+    if(remaining<=0){
+      clearInterval(tick);
+      setTimeout(()=>{
+        document.querySelectorAll('#board .card:not(.decoy)').forEach(c=>c.classList.remove('flipped'));
+        banner.style.display='none';
+        G.previewing=false;
+        G.lock=false;
+        startElapsedTimer();
+      },600);
+    }
+  },1000);
+}
+
+/* ═══════════════════════════════════════════
+   TIMERS
+═══════════════════════════════════════════ */
+function startElapsedTimer(){
+  if(G.lv.type==='s'){startSpeedTimer();return}
+  if(G.lv.type==='e'){startEndlessTimer();return}
+  G.startTime=Date.now();
+  G.timerInterval=setInterval(()=>{
+    const s=Math.floor((Date.now()-G.startTime)/1000);
+    document.getElementById('gs2v').textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  },500);
+}
+
+function startSpeedTimer(){
+  G.speedTimeLeft=G.lv.tl;
+  G.speedTimer=setInterval(()=>{
+    G.speedTimeLeft--;
+    const el=document.getElementById('gs1v');
+    el.textContent=G.speedTimeLeft;
+    const pill=document.getElementById('gstat1');
+    pill.className='stat-pill'+(G.speedTimeLeft<=10?' urgency':'');
+    if(G.speedTimeLeft<=0){
+      clearInterval(G.speedTimer);
+      endGame(false);
+    }
+  },1000);
+}
+
+function startEndlessTimer(){
+  const total=G.lv.dur;
+  G.endlessTimeLeft=total;
+  G.endlessTimer=setInterval(()=>{
+    G.endlessTimeLeft--;
+    document.getElementById('gs1v').textContent=G.endlessTimeLeft;
+    const pct=(G.endlessTimeLeft/total)*100;
+    document.getElementById('endless-prog').style.width=pct+'%';
+    if(G.endlessTimeLeft===10){
+      gsap.to('#endless-prog',{background:'linear-gradient(90deg,#FF9500,#FF3B30)',duration:.6,overwrite:true});
+      document.getElementById('gstat1').classList.add('urgency');
+    }
+    if(G.endlessTimeLeft<=0){
+      clearInterval(G.endlessTimer);
+      endGame(true);
+    }
+  },1000);
+}
+
+/* ═══════════════════════════════════════════
+   FLIP
+═══════════════════════════════════════════ */
+function flip(el){
+  if(G.previewing) return;
+  if(el.classList.contains('flipped')||el.classList.contains('matched')) return;
+
+  eagerFlip();
+
+  if(G.lock) return;
+
+  if(!G.startTime && G.lv.type==='n'){G.startTime=Date.now();startElapsedTimer()}
+  if(G.lv.type==='s'&&!G.speedTimer) startSpeedTimer();
+  if(G.lv.type==='e'&&!G.endlessTimer) startEndlessTimer();
+
+  el.classList.add('flipped');
+  G.flipped.push(el);
+  if(G.flipped.length<2) return;
+
+  G.lock=true;
+  if(G.lv.type!=='e'){
+    G.moves++;
+    if(G.lv.type==='n') document.getElementById('gs1v').textContent=G.moves;
+    if(G.lv.type==='s') document.getElementById('gs2v').textContent=G.moves;
+  }
+
+  const [a,b]=G.flipped;
+  const match = a.dataset.ci===b.dataset.ci && a.dataset.kind!==b.dataset.kind;
+
+  if(match){
+    G.matched.add(a.dataset.ci);
+    a.classList.add('matched'); b.classList.add('matched');
+    G.flipped=[]; G.lock=false;
+
+    if(G.lv.type==='e'){
+      G.endlessScore++;
+      document.getElementById('gs2v').textContent=G.endlessScore;
+    }
+
+    if(G.matched.size===G.lv.p){
+      if(G.lv.type==='e'){
+        setTimeout(resetEndlessBoard,700);
+      } else {
+        endGame(true);
+      }
+    }
+  } else {
+    G.flipBackTimer = setTimeout(()=>{
+      a.classList.remove('flipped'); b.classList.remove('flipped');
+      G.flipped=[]; G.lock=false;
+      G.flipBackTimer=null;
+    },G.lv.fb);
+  }
+}
+
+function resetEndlessBoard(){
+  document.querySelectorAll('#board .card.matched').forEach(c=>{
+    c.classList.remove('matched','flipped');
+  });
+  buildBoard();
+}
+
+/* ═══════════════════════════════════════════
+   END GAME
+═══════════════════════════════════════════ */
+function endGame(success){
+  clearTimeout(G.flipBackTimer);
+  G.flipBackTimer=null;
+  clearInterval(G.timerInterval);
+  clearInterval(G.speedTimer);
+  clearInterval(G.endlessTimer);
+  G.lock=true;
+
+  const lv=G.lv;
+  const idx=G.idx;
+  let stars=0, statsHtml='';
+
+  if(lv.type==='n'){
+    const elapsed=Math.floor((Date.now()-G.startTime)/1000);
+    const m=Math.floor(elapsed/60),s=elapsed%60;
+    stars=calcNormalStars(lv.p,G.moves);
+    statsHtml=`<b>${G.moves}</b> moves &nbsp;·&nbsp; <b>${m}:${String(s).padStart(2,'0')}</b> time`;
+  } else if(lv.type==='s'){
+    if(!success){
+      stars=0;
+      statsHtml=`<b>${G.matched.size}</b> / ${lv.p} pairs found`;
+    } else {
+      const remaining=G.speedTimeLeft;
+      stars=remaining>=lv.tl*.6?3:remaining>=lv.tl*.3?2:1;
+      statsHtml=`<b>${remaining}s</b> left &nbsp;·&nbsp; <b>${G.moves}</b> moves`;
+    }
+  } else {
+    const score=G.endlessScore;
+    const t=Math.floor(lv.dur*0.25);
+    stars=score>=t*2?3:score>=t?2:score>=3?1:0;
+    statsHtml=`<b>${score}</b> pairs / <b>${lv.dur}s</b>`;
+  }
+
+  saveProgress(idx,stars);
+  setTimeout(()=>showResult(idx,stars,statsHtml,success),500);
+}
+
+function calcNormalStars(pairs,moves){
+  if(moves<=Math.ceil(pairs*1.6)) return 3;
+  if(moves<=Math.ceil(pairs*2.5)) return 2;
+  return 1;
+}
+
+/* ═══════════════════════════════════════════
+   RESULT SCREEN
+═══════════════════════════════════════════ */
+function showResult(idx, stars, statsHtml, success){
+  const lv = LEVELS[idx];
+  const isSpeed = lv.type === 's';
+  const isEndless = lv.type === 'e';
+  const typeLabel = isSpeed ? 'Speed Run' : isEndless ? 'Endless Mode' : `Level ${idx+1}`;
+
+  let title;
+  if(!success) title = "Time's Up";
+  else if(isSpeed) title = stars===3 ? 'Blazing Fast!' : stars===2 ? 'Speedy!' : 'Completed';
+  else if(isEndless) title = stars===3 ? 'Amazing!' : stars===2 ? 'Nice!' : stars===1 ? 'Completed' : 'Keep Going!';
+  else title = stars===3 ? 'Perfect!' : stars===2 ? 'Great!' : 'Completed';
+
+  const glass = document.querySelector('#s-result .result-glass');
+  glass.classList.remove('sr-failed');
+  document.getElementById('sr-fail-notice').style.display='none';
+
+  document.getElementById('rlevel').textContent = typeLabel;
+  document.getElementById('rtitle').textContent = title;
+  document.getElementById('rstats').innerHTML = statsHtml;
+
+  document.getElementById('rbtn-retry').onclick=()=>startLevel(idx);
+  const nextIdx = idx+1;
+  const hasNext = nextIdx<50 && isUnlocked(nextIdx);
+  const nxtBtn = document.getElementById('rbtn-next');
+  if(hasNext){
+    nxtBtn.textContent='Continue →';
+    nxtBtn.onclick=()=>startLevel(nextIdx);
+    nxtBtn.style.display='';
+  } else if(!success && stars===0){
+    nxtBtn.style.display='none';
+  } else {
+    nxtBtn.textContent='Map';
+    nxtBtn.onclick=()=>{renderMap();show('s-map')};
+    nxtBtn.style.display='';
+  }
+
+  show('s-result');
+
+  if(isSpeed && !success){
+    glass.classList.add('sr-failed');
+    document.getElementById('sr-fail-notice').style.display='block';
+    ['st1','st2','st3'].forEach(id=>{
+      const el=document.getElementById(id);
+      el.className='star-icon';
+      el.textContent='☆';
+      gsap.set(el,{opacity:0});
+      gsap.to(el,{opacity:.13, duration:.5, delay:Math.random()*.2});
+    });
+    gsap.from(glass, {y:-24, opacity:0, duration:.32, ease:'power2.out'});
+    setTimeout(()=>{
+      gsap.to(glass, {x:-8, duration:.06, repeat:5, yoyo:true, ease:'none',
+        onComplete:()=>gsap.set(glass,{x:0})});
+    }, 330);
+
+  } else if(isSpeed && success){
+    ['st1','st2','st3'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      el.className='star-icon';
+      el.textContent = i<stars ? '⭐' : '☆';
+      if(i<stars){
+        gsap.set(el,{opacity:0, scale:0, rotation:-40});
+        gsap.to(el,{opacity:1, scale:1, rotation:0,
+          duration:.55, delay:.3+i*.18, ease:'back.out(2.8)'});
+      } else {
+        gsap.set(el,{opacity:.2});
+      }
+    });
+    gsap.from(glass, {scale:.82, opacity:0, duration:.45, ease:'back.out(1.8)'});
+    if(stars===3) setTimeout(burstParticles, 920);
+
+  } else if(isEndless){
+    ['st1','st2','st3'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      el.className='star-icon';
+      el.textContent = i<stars ? '⭐' : '☆';
+      if(i<stars){
+        gsap.set(el,{opacity:0, scale:0, rotation:-40});
+        gsap.to(el,{opacity:1, scale:1, rotation:0,
+          duration:.55, delay:.25+i*.2, ease:'back.out(2.8)'});
+      } else {
+        gsap.set(el,{opacity:0});
+        gsap.to(el,{opacity:.18, duration:.5, delay:i*.1});
+      }
+    });
+    gsap.from(glass, {scale:.88, opacity:0, duration:.4, ease:'back.out(1.6)'});
+    if(stars===3) setTimeout(burstParticles, 900);
+
+  } else {
+    ['st1','st2','st3'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      el.className='star-icon';
+      el.textContent = i<stars ? '⭐' : '☆';
+      void el.offsetWidth;
+      if(i<stars) el.classList.add('earned');
+      else el.style.opacity='.25';
+    });
+  }
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+document.getElementById('btn-back').onclick=()=>{
+  clearTimeout(G.flipBackTimer);
+  clearInterval(G.timerInterval);
+  clearInterval(G.speedTimer);
+  clearInterval(G.endlessTimer);
+  if(G.introTimeline){ G.introTimeline.kill(); G.introTimeline=null; }
+  ['sr-intro','el-intro'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el.style.display!=='none'){ el.style.display='none'; gsap.set(el,{opacity:1}); }
+  });
+  document.getElementById('preview-banner').style.display='none';
+  renderMap();
+  show('s-map');
+};
+document.getElementById('rbtn-retry').onclick=()=>startLevel(G.idx||0);
+
+renderMap();
+</script>
+</body>
+</html>
