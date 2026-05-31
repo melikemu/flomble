@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Flomble</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -33,15 +35,15 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 /* ══ MAP SCREEN ══ */
 .map-header{width:100%;max-width:600px;display:flex;justify-content:space-between;
   align-items:center;margin-bottom:20px}
-.map-title{font-size:.7rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
-.map-total-stars{font-size:.8rem;color:rgba(255,255,255,.35);letter-spacing:.5px}
+.map-title{font-family:'Pacifico',cursive;font-size:1.6rem;letter-spacing:0;text-transform:none;color:#fff}
+.map-total-stars{font-size:.8rem;color:rgba(255,255,255,.55);letter-spacing:.5px}
 .map-total-stars b{color:#FFD60A;font-weight:700}
 
 .map-scroll{width:100%;max-width:600px;display:flex;flex-direction:column;gap:20px;padding-bottom:20px}
 
 .chapter{display:flex;flex-direction:column;gap:8px}
 .chapter-label{font-size:.62rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;
-  color:rgba(255,255,255,.18);padding:0 2px;margin-bottom:2px}
+  color:rgba(255,255,255,.5);padding:0 2px;margin-bottom:2px}
 .level-row{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 
 .lvl-node{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;
@@ -56,10 +58,10 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 .lvl-node.speed{border-color:rgba(255,149,0,.35);box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(255,149,0,.08),inset 0 1px 0 rgba(255,255,255,.12)}
 .lvl-node.endless{border-color:rgba(191,90,242,.35);box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 12px rgba(191,90,242,.08),inset 0 1px 0 rgba(255,255,255,.12)}
 .lvl-node .lnum{font-size:.82rem;font-weight:800;color:rgba(255,255,255,.75);line-height:1}
-.lvl-node .lstars{font-size:.58rem;letter-spacing:1px;color:#FFD60A;line-height:1}
-.lvl-node .lbadge{position:absolute;top:4px;right:5px;font-size:.55rem;line-height:1;opacity:.7}
-.lvl-node.speed .lbadge{color:#FF9500;opacity:.9}
-.lvl-node.endless .lbadge{color:#BF5AF2;opacity:.9}
+.lvl-node .lstars{font-size:.82rem;letter-spacing:1px;color:#FFD60A;line-height:1}
+.lvl-node .lbadge{position:absolute;top:6px;right:6px;font-size:1.05rem;line-height:1}
+.lvl-node.speed .lbadge{color:#FF9500;filter:drop-shadow(0 0 5px rgba(255,149,0,.7))}
+.lvl-node.endless .lbadge{color:#BF5AF2;filter:drop-shadow(0 0 5px rgba(191,90,242,.7))}
 .lvl-node.locked .lnum{color:rgba(255,255,255,.3)}
 .lvl-node.locked .lstars{color:rgba(255,255,255,.15)}
 
@@ -83,12 +85,57 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 .stat-pill.urgency{border-color:rgba(255,80,80,.4);color:rgba(255,120,120,.8)}
 .stat-pill.urgency b{color:#FF3B30}
 
-/* Preview overlay */
-.preview-banner{position:fixed;top:0;left:0;right:0;z-index:50;pointer-events:none;
-  display:flex;justify-content:center;padding-top:max(56px,env(safe-area-inset-top,0px))}
+/* Preview area */
+.preview-area{width:100%;max-width:640px;height:44px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .preview-pill{padding:8px 18px;border-radius:100px;
   background:rgba(255,214,10,.15);border:1px solid rgba(255,214,10,.3);
-  font-size:.72rem;font-weight:700;color:#FFD60A;letter-spacing:1px}
+  font-size:.72rem;font-weight:700;color:#FFD60A;letter-spacing:1px;visibility:hidden}
+.preview-area.active .preview-pill{visibility:visible}
+
+/* ══ CHAPTER COMPLETE ══ */
+#ch-complete{position:fixed;inset:0;z-index:300;
+  display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.ch-radial{position:absolute;inset:0;pointer-events:none}
+.ch-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:32px;padding:36px 36px;width:calc(100% - 40px);max-width:360px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  position:relative;z-index:1;
+  box-shadow:0 32px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18)}
+.ch-card::before{content:'';position:absolute;top:0;left:15%;right:15%;height:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.07) 0%,transparent 100%);
+  border-radius:0 0 60% 60%;pointer-events:none}
+.ch-label{font-size:.6rem;font-weight:800;letter-spacing:5px;text-transform:uppercase;
+  color:rgba(255,255,255,.35);position:relative}
+.ch-icon{font-size:3rem;line-height:1.2;position:relative}
+.ch-name{font-size:2rem;font-weight:900;letter-spacing:-1px;position:relative}
+.ch-complete-txt{font-size:.7rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(255,255,255,.4);position:relative}
+.ch-stars-row{display:flex;align-items:baseline;gap:5px;margin:4px 0;position:relative}
+.ch-stars-big{font-size:3.2rem;font-weight:900;letter-spacing:-2px;line-height:1}
+.ch-stars-denom{font-size:1rem;color:rgba(255,255,255,.3);font-weight:600}
+.ch-pills{display:flex;gap:8px;width:100%;position:relative}
+.ch-pill{flex:1;padding:10px 4px;border-radius:14px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  display:flex;flex-direction:column;align-items:center;gap:3px}
+.ch-pill-val{font-size:1.05rem;font-weight:800;color:#fff}
+.ch-pill-lbl{font-size:.52rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:rgba(255,255,255,.32)}
+.ch-prog-wrap{width:100%;position:relative}
+.ch-prog-track{width:100%;height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.ch-prog-fill{height:100%;border-radius:3px;width:0}
+.ch-prog-lbl{font-size:.6rem;color:rgba(255,255,255,.3);letter-spacing:.5px;
+  margin-top:6px;text-align:center}
+.ch-btn{margin-top:8px;width:100%;padding:14px 0;border-radius:100px;cursor:pointer;
+  font-size:.88rem;font-family:inherit;font-weight:700;letter-spacing:.3px;border:none;
+  color:#fff;position:relative;touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.2);
+  transition:transform .18s,opacity .18s}
+.ch-btn:active{transform:scale(.95);opacity:.85}
+@keyframes chFall{
+  0%{transform:translateY(-10px) rotate(0deg);opacity:.9}
+  100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
+.ch-particle{position:absolute;pointer-events:none;animation:chFall linear forwards}
 
 /* Endless overlay bar */
 .endless-bar{width:100%;max-width:640px;height:4px;border-radius:2px;
@@ -254,6 +301,9 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
   <div class="endless-bar" id="endless-bar" style="display:none">
     <div class="endless-progress" id="endless-prog"></div>
   </div>
+  <div class="preview-area" id="preview-area" style="display:none">
+    <div class="preview-pill" id="preview-text">Memorize!</div>
+  </div>
   <div id="board"></div>
   <p class="game-hint" id="ghint">Match the color block · <span>with the card showing the same color name</span></p>
 </div>
@@ -299,8 +349,40 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
   <div class="el-skip">Tap · Skip</div>
 </div>
 
-<div class="preview-banner" id="preview-banner" style="display:none">
-  <div class="preview-pill" id="preview-text">Memorize!</div>
+<!-- CHAPTER COMPLETE -->
+<div id="ch-complete">
+  <div class="ch-radial" id="ch-radial"></div>
+  <div class="ch-card" id="ch-card">
+    <div class="ch-label" id="ch-label">Chapter 1</div>
+    <div class="ch-icon" id="ch-icon">🌿</div>
+    <div class="ch-name" id="ch-name">Beginner</div>
+    <div class="ch-complete-txt">Complete!</div>
+    <div class="ch-stars-row">
+      <span class="ch-stars-big" id="ch-stars-big">0</span>
+      <span class="ch-stars-denom">/30 ★</span>
+    </div>
+    <div class="ch-pills">
+      <div class="ch-pill">
+        <span class="ch-pill-val" id="ch-perfect">0</span>
+        <span class="ch-pill-lbl">Perfect</span>
+      </div>
+      <div class="ch-pill">
+        <span class="ch-pill-val" id="ch-cleared">0</span>
+        <span class="ch-pill-lbl">Cleared</span>
+      </div>
+      <div class="ch-pill">
+        <span class="ch-pill-val" id="ch-total">0</span>
+        <span class="ch-pill-lbl">Total ★</span>
+      </div>
+    </div>
+    <div class="ch-prog-wrap">
+      <div class="ch-prog-track">
+        <div class="ch-prog-fill" id="ch-prog-fill"></div>
+      </div>
+      <div class="ch-prog-lbl" id="ch-prog-lbl">0 / 150 stars</div>
+    </div>
+    <button class="ch-btn" id="ch-btn">Continue →</button>
+  </div>
 </div>
 
 <script>
@@ -448,7 +530,7 @@ function renderMap(){
         node.className='lvl-node'+typeClass+(unlocked?stars>0?' completed':'':' locked');
         const badge = lv.type==='s'?'⚡':lv.type==='e'?'∞':'';
         const starStr = unlocked
-          ? (stars===3?'★★★':stars===2?'★★☆':stars===1?'★☆☆':'☆☆☆')
+          ? '★'.repeat(stars)
           : '🔒';
         node.innerHTML=`<div class="lnum">${i+1}</div><div class="lstars">${starStr}</div>${badge?`<div class="lbadge">${badge}</div>`:''}`;
         if(unlocked) node.addEventListener('click',()=>startLevel(i));
@@ -472,10 +554,23 @@ function lum(hex){
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 
 function setCols(n){
-  const eff = (n===6 && window.innerWidth<540) ? 4 : n;
-  const card = Math.floor((Math.min(window.innerWidth, 640) - 32 - (eff - 1) * 8) / eff);
-  document.documentElement.style.setProperty('--lc', eff);
-  document.documentElement.style.setProperty('--card', card + 'px');
+  const t = G.lv.t;
+  let eff = (n===6 && window.innerWidth<540) ? 4 : n;
+  const availW = Math.min(window.innerWidth, 640) - 32;
+  const previewH = G.lv.pre > 0 ? 52 : 0; // preview-area 44px + margin-bottom 8px
+  const availH = window.innerHeight - 140 - previewH;
+  // Find the col count (≤ eff, t must divide evenly) that gives the largest square card
+  let bestCard = 0, bestCols = eff;
+  for(let c = eff; c >= 2; c--){
+    if(t % c !== 0) continue;
+    const r = t / c;
+    const cw = Math.floor((availW - (c-1)*8) / c);
+    const ch = Math.floor((availH - (r-1)*8) / r);
+    const sz = Math.min(cw, ch);
+    if(sz > bestCard){ bestCard = sz; bestCols = c; }
+  }
+  document.documentElement.style.setProperty('--lc', bestCols);
+  document.documentElement.style.setProperty('--card', bestCard+'px');
 }
 
 /* ═══════════════════════════════════════════
@@ -524,6 +619,9 @@ function startLevel(idx){
   document.getElementById('endless-prog').style.width='100%';
   gsap.set('#endless-prog',{background:'linear-gradient(90deg,#BF5AF2,#007AFF)'});
   document.getElementById('ghint').style.display = lv.type==='e' ? 'none':'';
+  const previewArea = document.getElementById('preview-area');
+  previewArea.style.display = lv.pre > 0 ? 'flex' : 'none';
+  previewArea.classList.remove('active');
 
   buildBoard();
   show('s-game');
@@ -790,9 +888,9 @@ function eagerFlip(){
 function runPreview(){
   G.previewing=true;
   G.lock=true;
-  const banner=document.getElementById('preview-banner');
+  const area=document.getElementById('preview-area');
   const txt=document.getElementById('preview-text');
-  banner.style.display='flex';
+  area.classList.add('active');
 
   document.querySelectorAll('#board .card:not(.decoy)').forEach(c=>c.classList.add('flipped'));
 
@@ -805,7 +903,7 @@ function runPreview(){
       clearInterval(tick);
       setTimeout(()=>{
         document.querySelectorAll('#board .card:not(.decoy)').forEach(c=>c.classList.remove('flipped'));
-        banner.style.display='none';
+        area.classList.remove('active');
         G.previewing=false;
         G.lock=false;
         startElapsedTimer();
@@ -996,7 +1094,12 @@ function showResult(idx, stars, statsHtml, success){
   const nextIdx = idx+1;
   const hasNext = nextIdx<50 && isUnlocked(nextIdx);
   const nxtBtn = document.getElementById('rbtn-next');
-  if(hasNext){
+  const chapterEnd = [9,19,29,39,49].includes(idx) && success && stars>=1;
+  if(chapterEnd){
+    nxtBtn.textContent='Continue →';
+    nxtBtn.onclick=()=>showChapterComplete(Math.floor(idx/10));
+    nxtBtn.style.display='';
+  } else if(hasNext){
     nxtBtn.textContent='Continue →';
     nxtBtn.onclick=()=>startLevel(nextIdx);
     nxtBtn.style.display='';
@@ -1072,6 +1175,104 @@ function showResult(idx, stars, statsHtml, success){
 }
 
 /* ═══════════════════════════════════════════
+   CHAPTER COMPLETE
+═══════════════════════════════════════════ */
+const CH_THEMES = [
+  {label:'Chapter 1',name:'Beginner',    color:'#30D158',bg:'rgba(48,209,88,.16)',  icon:'🌿'},
+  {label:'Chapter 2',name:'Intermediate',color:'#007AFF',bg:'rgba(0,122,255,.16)',  icon:'⚡'},
+  {label:'Chapter 3',name:'Challenge',   color:'#FF9500',bg:'rgba(255,149,0,.16)',  icon:'🔥'},
+  {label:'Chapter 4',name:'Expert',      color:'#BF5AF2',bg:'rgba(191,90,242,.16)', icon:'💎'},
+  {label:'Chapter 5',name:'Legend',      color:'#FFD60A',bg:'rgba(255,214,10,.16)', icon:'👑'},
+];
+
+function showChapterComplete(chIdx){
+  // Hide result screen so it doesn't show through the overlay
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+  // Show NEXT chapter's identity; for the final chapter show its own as "complete"
+  const nextIdx = chIdx + 1;
+  const isLast  = nextIdx >= CH_THEMES.length;
+  const th      = isLast ? CH_THEMES[chIdx] : CH_THEMES[nextIdx];
+
+  // Stats always come from the chapter that was just completed
+  const base    = chIdx*10;
+  const chProg  = progress.slice(base, base+10);
+  const chStars = chProg.reduce((a,b)=>a+b,0);
+  const perfect = chProg.filter(s=>s===3).length;
+  const cleared = chProg.filter(s=>s>=1).length;
+  const tot     = totalStars();
+  const pct     = (tot/150)*100;
+
+  const ov = document.getElementById('ch-complete');
+  document.getElementById('ch-radial').style.background =
+    `radial-gradient(ellipse at 50% 42%,${th.bg} 0%,rgba(6,6,14,.97) 65%)`;
+  document.getElementById('ch-label').textContent  = isLast ? 'All Chapters' : th.label;
+  document.getElementById('ch-icon').textContent   = th.icon;
+  const nameEl = document.getElementById('ch-name');
+  nameEl.textContent = isLast ? 'Legendary!' : th.name;
+  nameEl.style.color = th.color;
+  document.querySelector('.ch-complete-txt').textContent = isLast ? 'Complete!' : 'Unlocked!';
+  document.getElementById('ch-stars-big').style.color = th.color;
+  document.getElementById('ch-perfect').textContent = perfect;
+  document.getElementById('ch-cleared').textContent = cleared;
+  document.getElementById('ch-total').textContent   = tot;
+  document.getElementById('ch-prog-lbl').textContent = `${tot} / 150 total stars`;
+  const fillEl = document.getElementById('ch-prog-fill');
+  fillEl.style.background = th.color;
+  fillEl.style.width = '0';
+  const btn = document.getElementById('ch-btn');
+  btn.style.background  = th.color;
+  btn.style.boxShadow   = `0 6px 24px ${th.bg},inset 0 1px 0 rgba(255,255,255,.2)`;
+
+  ov.style.display = 'flex';
+  gsap.set(ov,        {opacity:0});
+  gsap.set('#ch-card',{y:48, opacity:0, scale:.86});
+  gsap.set('#ch-label,#ch-icon,#ch-name,.ch-complete-txt,.ch-stars-row,.ch-pills,.ch-prog-wrap,#ch-btn',
+    {opacity:0, y:18});
+
+  const starsEl = document.getElementById('ch-stars-big');
+  starsEl.textContent = '0';
+  const counter = {val:0};
+
+  gsap.timeline()
+    .to(ov,               {opacity:1, duration:.3})
+    .to('#ch-card',       {y:0, opacity:1, scale:1, duration:.55, ease:'back.out(1.6)'}, '-=.1')
+    .to('#ch-label',      {opacity:1, y:0, duration:.28, ease:'power2.out'}, '-=.05')
+    .to('#ch-icon',       {opacity:1, y:0, duration:.44, ease:'back.out(2.4)'}, '-=.1')
+    .to('#ch-name',       {opacity:1, y:0, duration:.32, ease:'power2.out'}, '-=.12')
+    .to('.ch-complete-txt',{opacity:1, y:0, duration:.28, ease:'power2.out'}, '-=.08')
+    .to('.ch-stars-row',  {opacity:1, y:0, duration:.28, ease:'power2.out'}, '-=.04')
+    .to(counter, {val:chStars, duration:.7, ease:'power2.out',
+      onUpdate:()=>{ starsEl.textContent = Math.round(counter.val); }}, '-=.1')
+    .to('.ch-pills',      {opacity:1, y:0, duration:.32, ease:'power2.out'}, '-=.25')
+    .to('.ch-prog-wrap',  {opacity:1, y:0, duration:.28, ease:'power2.out'}, '-=.1')
+    .to(fillEl,           {width:pct+'%', duration:1.0, ease:'power2.out'}, '-=.1')
+    .to('#ch-btn',        {opacity:1, y:0, duration:.28, ease:'power2.out'}, '-=.55');
+
+  const syms = ['★','✦','◆','•'];
+  for(let i=0;i<22;i++){
+    const p=document.createElement('div');
+    p.className='ch-particle';
+    p.textContent=syms[i%syms.length];
+    const sz=.5+Math.random()*.75;
+    p.style.cssText=`left:${Math.random()*100}%;top:-30px;color:${th.color};`+
+      `font-size:${sz}rem;opacity:${.25+Math.random()*.5};`+
+      `animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*.6}s;`;
+    ov.appendChild(p);
+    setTimeout(()=>p.remove(),7000);
+  }
+
+  btn.onclick = ()=>{
+    gsap.to(ov,{opacity:0,duration:.25,ease:'power2.in',onComplete:()=>{
+      ov.style.display='none';
+      ov.querySelectorAll('.ch-particle').forEach(p=>p.remove());
+      renderMap(); show('s-map');
+    }});
+  };
+  ov.onclick = e=>{ if(e.target===ov) btn.click(); };
+}
+
+/* ═══════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════ */
 document.getElementById('btn-back').onclick=()=>{
@@ -1084,7 +1285,9 @@ document.getElementById('btn-back').onclick=()=>{
     const el=document.getElementById(id);
     if(el.style.display!=='none'){ el.style.display='none'; gsap.set(el,{opacity:1}); }
   });
-  document.getElementById('preview-banner').style.display='none';
+  const pa=document.getElementById('preview-area');
+  pa.classList.remove('active');
+  pa.style.display='none';
   renderMap();
   show('s-map');
 };
