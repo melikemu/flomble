@@ -426,7 +426,7 @@ const LEVELS = [
   {p:5,t:12,pre:1000,fb:950, cols:4,type:'n'}, // 12
   {p:6,t:12,pre:500, fb:950, cols:4,type:'n'}, // 13
   {p:4,t:12,pre:500, fb:950, cols:4,type:'n'}, // 14
-  {p:12,t:24,pre:3000,fb:950,cols:6,type:'e',dur:75}, // 15 ENDLESS
+  {p:12,t:24,pre:3000,fb:950,cols:6,type:'e',dur:75,eStars:[4,12,18]}, // 15 ENDLESS
   {p:7,t:16,pre:500, fb:900, cols:4,type:'n'}, // 16
   {p:8,t:16,pre:500, fb:900, cols:4,type:'n'}, // 17
   {p:6,t:16,pre:500, fb:900, cols:4,type:'n'}, // 18
@@ -436,25 +436,25 @@ const LEVELS = [
 // ── Chapter 3: Challenge (21-30) ──
   {p:7,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 21
   {p:8,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 22
-  {p:6,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 23
-  {p:8,t:16,pre:0,   fb:850, cols:4,type:'n'}, // 24
-  {p:12,t:24,pre:2000,fb:850,cols:6,type:'e',dur:60}, // 25 ENDLESS
-  {p:9,t:20, pre:0,  fb:800, cols:4,type:'n'}, // 26
-  {p:10,t:20,pre:0,  fb:800, cols:4,type:'n'}, // 27
-  {p:8,t:20, pre:0,  fb:800, cols:4,type:'n'}, // 28
-  {p:10,t:20,pre:0,  fb:800, cols:4,type:'n'}, // 29
+  {p:6,t:16,pre:1000,fb:850, cols:4,type:'n'}, // 23
+  {p:8,t:16,pre:1000,fb:850, cols:4,type:'n'}, // 24
+  {p:12,t:24,pre:2000,fb:850,cols:6,type:'e',dur:60,eStars:[4,12,18]}, // 25 ENDLESS
+  {p:9,t:20, pre:1000,fb:800, cols:4,type:'n'}, // 26
+  {p:10,t:20,pre:1000,fb:800, cols:4,type:'n'}, // 27
+  {p:8,t:20, pre:1000,fb:800, cols:4,type:'n'}, // 28
+  {p:10,t:20,pre:1000,fb:800, cols:4,type:'n'}, // 29
   {p:10,t:20,pre:0,  fb:800, cols:4,type:'s',tl:58}, // 30 SPEED
 
 // ── Chapter 4: Expert (31-40) ──
-  {p:9, t:20,pre:0,  fb:750, cols:4,type:'n'}, // 31
-  {p:10,t:20,pre:0,  fb:750, cols:4,type:'n'}, // 32
-  {p:8, t:20,pre:0,  fb:750, cols:4,type:'n'}, // 33
-  {p:10,t:20,pre:0,  fb:750, cols:4,type:'n'}, // 34
-  {p:12,t:24,pre:1500,fb:750,cols:6,type:'e',dur:75}, // 35 ENDLESS
-  {p:11,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 36
-  {p:12,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 37
-  {p:10,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 38
-  {p:12,t:24,pre:0,  fb:700, cols:6,type:'n'}, // 39
+  {p:9, t:20,pre:1000,fb:750, cols:4,type:'n'}, // 31
+  {p:10,t:20,pre:1000,fb:750, cols:4,type:'n'}, // 32
+  {p:8, t:20,pre:1000,fb:750, cols:4,type:'n'}, // 33
+  {p:10,t:20,pre:1000,fb:750, cols:4,type:'n'}, // 34
+  {p:12,t:24,pre:1500,fb:750,cols:6,type:'e',dur:75,eStars:[4,12,20]}, // 35 ENDLESS
+  {p:11,t:24,pre:1000,fb:700, cols:6,type:'n'}, // 36
+  {p:12,t:24,pre:1000,fb:700, cols:6,type:'n'}, // 37
+  {p:10,t:24,pre:1000,fb:700, cols:6,type:'n'}, // 38
+  {p:12,t:24,pre:1000,fb:700, cols:6,type:'n'}, // 39
   {p:12,t:24,pre:0,  fb:700, cols:6,type:'s',tl:70}, // 40 SPEED
 
 // ── Chapter 5: Legend (41-50) ──
@@ -462,7 +462,7 @@ const LEVELS = [
   {p:12,t:24,pre:0,  fb:650, cols:6,type:'n'}, // 42
   {p:9, t:24,pre:0,  fb:650, cols:6,type:'n'}, // 43
   {p:12,t:24,pre:0,  fb:650, cols:6,type:'n'}, // 44
-  {p:12,t:24,pre:1000,fb:650,cols:6,type:'e',dur:90}, // 45 ENDLESS
+  {p:12,t:24,pre:0,   fb:650,cols:6,type:'e',dur:90,eStars:[4,12,24]}, // 45 ENDLESS
   {p:12,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 46
   {p:10,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 47
   {p:12,t:24,pre:0,  fb:600, cols:6,type:'n'}, // 48
@@ -491,7 +491,12 @@ function saveProgress(idx,stars){
 }
 let progress = loadProgress();
 
-function isUnlocked(i){return i===0||progress[i-1]>=1}
+function isUnlocked(i){
+  const ch=Math.floor(i/10),pos=i%10;
+  const chapterOpen=ch===0||progress[ch*10-1]>=1;
+  if(pos!==9) return chapterOpen;
+  return chapterOpen&&progress.slice(ch*10,ch*10+9).every(s=>s>=1);
+}
 function totalStars(){return progress.reduce((a,b)=>a+b,0)}
 
 /* ═══════════════════════════════════════════
@@ -1052,8 +1057,8 @@ function endGame(success){
     }
   } else {
     const score=G.endlessScore;
-    const t=Math.floor(lv.dur*0.25);
-    stars=score>=t*2?3:score>=t?2:score>=3?1:0;
+    const [t1,t2,t3]=lv.eStars;
+    stars=score>=t3?3:score>=t2?2:score>=t1?1:0;
     statsHtml=`<b>${score}</b> pairs / <b>${lv.dur}s</b>`;
   }
 
