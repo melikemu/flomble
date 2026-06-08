@@ -41,6 +41,38 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 
 .map-scroll{width:100%;max-width:600px;display:flex;flex-direction:column;gap:20px;padding-bottom:20px}
 
+.map-footer{width:100%;max-width:600px;display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:24px}
+.mf-credits-btn{background:transparent;border:none;color:rgba(255,255,255,.32);
+  font-family:-apple-system,'Helvetica Neue',sans-serif;font-size:.72rem;letter-spacing:.08em;
+  cursor:pointer;padding:4px 0;text-decoration:underline;text-underline-offset:3px;
+  transition:color .18s;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.mf-credits-btn:hover{color:rgba(255,255,255,.55)}
+.mf-coffee-link{display:inline-block;margin-top:8px;padding:7px 18px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;
+  color:rgba(255,255,255,.45);font-family:-apple-system,'Helvetica Neue',sans-serif;
+  font-size:.72rem;letter-spacing:.08em;text-decoration:none;
+  transition:background .18s,border-color .18s,color .18s;touch-action:manipulation}
+.mf-coffee-link:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.22);color:rgba(255,255,255,.7)}
+
+/* Credits modal */
+#credits-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+  z-index:300;align-items:center;justify-content:center;padding:32px}
+.credits-card{background:rgba(18,18,30,.97);border:1px solid rgba(255,255,255,.13);
+  border-radius:20px;padding:40px 36px;max-width:300px;width:100%;text-align:center;
+  box-shadow:0 32px 80px rgba(0,0,0,.7)}
+.credits-title{font-family:'Pacifico',cursive;font-size:1.8rem;color:#fff;margin-bottom:6px}
+.credits-subtitle{font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.28);
+  text-transform:uppercase;margin-bottom:28px}
+.credits-role{font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.28);
+  text-transform:uppercase;margin-bottom:12px;font-weight:700}
+.credits-name{font-size:.95rem;color:rgba(255,255,255,.8);letter-spacing:.04em;margin-bottom:28px}
+.credits-year{font-size:.6rem;letter-spacing:.2em;color:rgba(255,255,255,.28);
+  text-transform:uppercase;margin-bottom:28px}
+.credits-close{background:transparent;border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;color:rgba(255,255,255,.5);font-family:inherit;font-size:.72rem;
+  letter-spacing:.1em;padding:10px 28px;cursor:pointer;transition:border-color .18s,color .18s}
+.credits-close:hover{border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.75)}
+
 .chapter{display:flex;flex-direction:column;gap:8px}
 .chapter-label{font-size:.62rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;
   color:rgba(255,255,255,.5);padding:0 2px;margin-bottom:2px}
@@ -283,6 +315,10 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
     <div class="map-total-stars">Total <b id="total-stars">0</b>/150 ★</div>
   </div>
   <div class="map-scroll" id="map-scroll"></div>
+  <div class="map-footer">
+    <button class="mf-credits-btn" onclick="showCredits()">Credits</button>
+    <a class="mf-coffee-link" href="https://buymeacoffee.com/melikemuhur" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+  </div>
 </div>
 
 <!-- GAME -->
@@ -1299,6 +1335,21 @@ document.getElementById('btn-back').onclick=()=>{
 document.getElementById('rbtn-retry').onclick=()=>startLevel(G.idx||0);
 
 renderMap();
+
+function showCredits(){document.getElementById('credits-modal').style.display='flex'}
+function hideCredits(){document.getElementById('credits-modal').style.display='none'}
 </script>
+
+<!-- CREDITS MODAL -->
+<div id="credits-modal" onclick="hideCredits()">
+  <div class="credits-card" onclick="event.stopPropagation()">
+    <div class="credits-title">Flomble</div>
+    <div class="credits-subtitle">Color Memory Game</div>
+    <div class="credits-role">Developed by</div>
+    <div class="credits-name">Melike Mühür</div>
+    <div class="credits-year">Flomble · 2026</div>
+    <button class="credits-close" onclick="hideCredits()">Close</button>
+  </div>
+</div>
 </body>
 </html>
