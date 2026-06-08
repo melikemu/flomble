@@ -422,6 +422,14 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 </div>
 
 <script>
+const SFX = {
+  flip:    new Audio('sounds/flip.mp3'),
+  decoy:   new Audio('sounds/decoy card click.mp3'),
+  done:    new Audio('sounds/level tamamlandı.mp3'),
+  unlock:  new Audio("sounds/yeni challange'ın kilidi açıldı.mp3")
+};
+function playSound(k){const a=SFX[k];a.currentTime=0;a.play().catch(()=>{})}
+
 /* ═══════════════════════════════════════════
    COLORS
 ═══════════════════════════════════════════ */
@@ -901,6 +909,7 @@ function buildBoard(){
         if(G.lv.type==='n') document.getElementById('gs1v').textContent=G.moves;
         if(G.lv.type==='s') document.getElementById('gs2v').textContent=G.moves;
       }
+      playSound('decoy');
       el.classList.add('shake');
       el.addEventListener('animationend',()=>el.classList.remove('shake'),{once:true});
     });
@@ -1015,6 +1024,7 @@ function flip(el){
   if(G.lv.type==='s'&&!G.speedTimer) startSpeedTimer();
   if(G.lv.type==='e'&&!G.endlessTimer) startEndlessTimer();
 
+  playSound('flip');
   el.classList.add('flipped');
   G.flipped.push(el);
   if(G.flipped.length<2) return;
@@ -1099,6 +1109,7 @@ function endGame(success){
   }
 
   saveProgress(idx,stars);
+  if(success) playSound('done');
   setTimeout(()=>showResult(idx,stars,statsHtml,success),500);
 }
 
@@ -1244,6 +1255,7 @@ function showChapterComplete(chIdx){
   const tot     = totalStars();
   const pct     = (tot/150)*100;
 
+  playSound('unlock');
   const ov = document.getElementById('ch-complete');
   document.getElementById('ch-radial').style.background =
     `radial-gradient(ellipse at 50% 42%,${th.bg} 0%,rgba(6,6,14,.97) 65%)`;
