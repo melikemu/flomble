@@ -436,15 +436,23 @@ Object.entries(_sfxUrls).forEach(([k,url])=>{
 document.addEventListener('touchstart',()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 document.addEventListener('mousedown', ()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 let _muted = localStorage.getItem('cf-muted')==='1';
+const _sfxGain={decoy:0.5};
 function playSound(k){
   if(_muted||!SFX[k]) return;
-  const play=()=>{const s=_ac.createBufferSource();s.buffer=SFX[k];s.connect(_ac.destination);s.start(0)};
+  const play=()=>{
+    const s=_ac.createBufferSource();s.buffer=SFX[k];
+    if(_sfxGain[k]!=null){const g=_ac.createGain();g.gain.value=_sfxGain[k];s.connect(g);g.connect(_ac.destination);}
+    else s.connect(_ac.destination);
+    s.start(0);
+  };
   _ac.state==='suspended'?_ac.resume().then(play):play();
 }
+const _sndOnSVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+const _sndOffSVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>`;
 function toggleSound(){
   _muted=!_muted;
   localStorage.setItem('cf-muted',_muted?'1':'0');
-  document.getElementById('snd-toggle').textContent=_muted?'🔇':'🔊';
+  document.getElementById('snd-toggle').innerHTML=_muted?_sndOffSVG:_sndOnSVG;
 }
 
 /* ═══════════════════════════════════════════
@@ -1377,7 +1385,7 @@ document.getElementById('btn-back').onclick=()=>{
 document.getElementById('rbtn-retry').onclick=()=>startLevel(G.idx||0);
 
 renderMap();
-document.getElementById('snd-toggle').textContent=_muted?'🔇':'🔊';
+document.getElementById('snd-toggle').innerHTML=_muted?_sndOffSVG:_sndOnSVG;
 
 function showCredits(){document.getElementById('credits-modal').style.display='flex'}
 function hideCredits(){document.getElementById('credits-modal').style.display='none'}
