@@ -116,6 +116,7 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 .stat-pill b{color:rgba(255,255,255,.82);font-weight:700}
 .stat-pill.urgency{border-color:rgba(255,80,80,.4);color:rgba(255,120,120,.8)}
 .stat-pill.urgency b{color:#FF3B30}
+.snd-toggle{cursor:pointer;font-size:.9rem;border:none;font-family:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 
 /* Preview area */
 .preview-area{width:100%;max-width:640px;height:44px;flex-shrink:0;
@@ -330,6 +331,7 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
       <div class="game-badge" id="gbadge"></div>
     </div>
     <div class="game-stats">
+      <button class="stat-pill snd-toggle" id="snd-toggle" onclick="toggleSound()"></button>
       <div class="stat-pill" id="gstat1"><b id="gs1v">0</b></div>
       <div class="stat-pill" id="gstat2"><b id="gs2v">0:00</b></div>
     </div>
@@ -425,7 +427,7 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 const _ac = new (window.AudioContext||window.webkitAudioContext)();
 const SFX = {};
 const _sfxUrls = {
-  flip:'sounds/turn2.mp3', decoy:'sounds/decoy card click.mp3',
+  match:'sounds/eşleştirme.mp3', decoy:'sounds/decoy card click.mp3',
   done:'sounds/level tamamlandı.mp3', unlock:"sounds/yeni challange'ın kilidi açıldı.mp3"
 };
 Object.entries(_sfxUrls).forEach(([k,url])=>{
@@ -433,10 +435,16 @@ Object.entries(_sfxUrls).forEach(([k,url])=>{
 });
 document.addEventListener('touchstart',()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 document.addEventListener('mousedown', ()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
+let _muted = localStorage.getItem('cf-muted')==='1';
 function playSound(k){
-  if(!SFX[k]) return;
+  if(_muted||!SFX[k]) return;
   const play=()=>{const s=_ac.createBufferSource();s.buffer=SFX[k];s.connect(_ac.destination);s.start(0)};
   _ac.state==='suspended'?_ac.resume().then(play):play();
+}
+function toggleSound(){
+  _muted=!_muted;
+  localStorage.setItem('cf-muted',_muted?'1':'0');
+  document.getElementById('snd-toggle').textContent=_muted?'🔇':'🔊';
 }
 
 /* ═══════════════════════════════════════════
@@ -1043,7 +1051,6 @@ function flip(el){
   if(G.lv.type==='s'&&!G.speedTimer) startSpeedTimer();
   if(G.lv.type==='e'&&!G.endlessTimer) startEndlessTimer();
 
-  playSound('flip');
   el.classList.add('flipped');
   G.flipped.push(el);
   if(G.flipped.length<2) return;
@@ -1059,6 +1066,7 @@ function flip(el){
   const match = a.dataset.ci===b.dataset.ci && a.dataset.kind!==b.dataset.kind;
 
   if(match){
+    playSound('match');
     G.matched.add(a.dataset.ci);
     a.classList.add('matched'); b.classList.add('matched');
     G.flipped=[]; G.lock=false;
@@ -1369,6 +1377,7 @@ document.getElementById('btn-back').onclick=()=>{
 document.getElementById('rbtn-retry').onclick=()=>startLevel(G.idx||0);
 
 renderMap();
+document.getElementById('snd-toggle').textContent=_muted?'🔇':'🔊';
 
 function showCredits(){document.getElementById('credits-modal').style.display='flex'}
 function hideCredits(){document.getElementById('credits-modal').style.display='none'}
