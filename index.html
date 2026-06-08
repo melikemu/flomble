@@ -635,13 +635,19 @@ function setCols(n){
    START LEVEL
 ═══════════════════════════════════════════ */
 function startLevel(idx){
-  if(G.flipBackTimer) clearTimeout(G.flipBackTimer);
+  clearTimeout(G.flipBackTimer);
+  clearTimeout(G.previewTimeout);
+  clearInterval(G.previewTick);
+  clearInterval(G.timerInterval);
+  clearInterval(G.speedTimer);
+  clearInterval(G.endlessTimer);
+  if(G.introTimeline){G.introTimeline.kill();G.introTimeline=null;}
   const lv=LEVELS[idx];
   G={
     idx,lv,
     flipped:[],matched:new Set(),moves:0,lock:false,
     startTime:null,elapsed:0,timerInterval:null,
-    previewing:false,
+    previewing:false,previewTick:null,previewTimeout:null,
     endlessScore:0,endlessTimeLeft:lv.dur||0,endlessTimer:null,
     speedTimeLeft:lv.tl||0,speedTimer:null,
     introTimeline:null,
@@ -725,6 +731,8 @@ function showSpeedRunIntro(idx, callback){
   gsap.set(lnumEl, {opacity:0, scale:.45});
   gsap.set(ruleEl, {opacity:0, y:18});
   gsap.set(cdEl, {opacity:0, scale:3.2});
+  let _introDone=false;
+  const safeCallback=()=>{if(_introDone)return;_introDone=true;callback();};
 
   const tl = gsap.timeline();
   G.introTimeline = tl;
@@ -753,7 +761,7 @@ function showSpeedRunIntro(idx, callback){
     .call(()=>{
       overlay.style.display='none';
       G.introTimeline=null;
-      callback();
+      safeCallback();
     });
 
   overlay.addEventListener('click', function skip(){
@@ -762,7 +770,7 @@ function showSpeedRunIntro(idx, callback){
     G.introTimeline=null;
     gsap.to(overlay, {opacity:0, duration:.2, ease:'power2.in', onComplete:()=>{
       overlay.style.display='none';
-      callback();
+      safeCallback();
     }});
   });
 }
@@ -792,6 +800,8 @@ function showEndlessIntro(idx, callback){
   gsap.set(lnumEl, {opacity:0, scale:.5});
   gsap.set(ruleEl, {opacity:0, y:18});
   gsap.set(hintEl, {opacity:0, y:10});
+  let _introDone=false;
+  const safeCallback=()=>{if(_introDone)return;_introDone=true;callback();};
 
   const pulse = gsap.to(infEl, {
     scale:1.1, duration:1.5, ease:'sine.inOut', repeat:-1, yoyo:true, paused:true
@@ -813,7 +823,7 @@ function showEndlessIntro(idx, callback){
       pulse.kill();
       overlay.style.display='none';
       G.introTimeline=null;
-      callback();
+      safeCallback();
     });
 
   overlay.addEventListener('click', function skip(){
@@ -823,7 +833,7 @@ function showEndlessIntro(idx, callback){
     G.introTimeline=null;
     gsap.to(overlay, {opacity:0, duration:.2, ease:'power2.in', onComplete:()=>{
       overlay.style.display='none';
-      callback();
+      safeCallback();
     }});
   });
 }
@@ -955,12 +965,12 @@ function runPreview(){
 
   let remaining=Math.ceil(G.lv.pre/1000);
   txt.textContent=`Memorize! ${remaining}`;
-  const tick=setInterval(()=>{
+  G.previewTick=setInterval(()=>{
     remaining--;
     txt.textContent=remaining>0?`Memorize! ${remaining}`:'Ready?';
     if(remaining<=0){
-      clearInterval(tick);
-      setTimeout(()=>{
+      clearInterval(G.previewTick);
+      G.previewTimeout=setTimeout(()=>{
         document.querySelectorAll('#board .card:not(.decoy)').forEach(c=>c.classList.remove('flipped'));
         area.classList.remove('active');
         G.previewing=false;
@@ -1086,7 +1096,8 @@ function resetEndlessBoard(){
 ═══════════════════════════════════════════ */
 function endGame(success){
   clearTimeout(G.flipBackTimer);
-  G.flipBackTimer=null;
+  clearTimeout(G.previewTimeout);
+  clearInterval(G.previewTick);
   clearInterval(G.timerInterval);
   clearInterval(G.speedTimer);
   clearInterval(G.endlessTimer);
@@ -1339,6 +1350,8 @@ function showChapterComplete(chIdx){
 ═══════════════════════════════════════════ */
 document.getElementById('btn-back').onclick=()=>{
   clearTimeout(G.flipBackTimer);
+  clearTimeout(G.previewTimeout);
+  clearInterval(G.previewTick);
   clearInterval(G.timerInterval);
   clearInterval(G.speedTimer);
   clearInterval(G.endlessTimer);
