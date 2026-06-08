@@ -117,6 +117,12 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 .stat-pill.urgency{border-color:rgba(255,80,80,.4);color:rgba(255,120,120,.8)}
 .stat-pill.urgency b{color:#FF3B30}
 .snd-toggle{cursor:pointer;font-size:.9rem;border:none;font-family:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.result-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  color:rgba(255,255,255,.45);transition:background .18s,color .18s;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;z-index:1}
+@media(hover:hover)and(pointer:fine){.result-close:hover{background:rgba(255,255,255,.13);color:rgba(255,255,255,.8)}}
 
 /* Preview area */
 .preview-area{width:100%;max-width:640px;height:44px;flex-shrink:0;
@@ -350,6 +356,7 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 <div id="s-result" class="screen">
   <div class="result-wrap">
     <div class="result-glass">
+      <button class="result-close" onclick="renderMap();show('s-map')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       <div class="result-level" id="rlevel"></div>
       <div class="result-title" id="rtitle"></div>
       <div class="result-stars" id="rstars">
