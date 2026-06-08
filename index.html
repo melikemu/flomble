@@ -424,18 +424,19 @@ body{font-family:-apple-system,'Helvetica Neue',sans-serif;background:#06060e;co
 <script>
 const _ac = new (window.AudioContext||window.webkitAudioContext)();
 const SFX = {};
-['flip','decoy','done','unlock'].forEach(k=>{
-  const urls={flip:'sounds/flip.mp3',decoy:'sounds/decoy card click.mp3',
-    done:'sounds/level tamamlandı.mp3',unlock:"sounds/yeni challange'ın kilidi açıldı.mp3"};
-  fetch(urls[k]).then(r=>r.arrayBuffer()).then(b=>_ac.decodeAudioData(b,buf=>{SFX[k]=buf}));
+const _sfxUrls = {
+  flip:'sounds/flip.mp3', decoy:'sounds/decoy card click.mp3',
+  done:'sounds/level tamamlandı.mp3', unlock:"sounds/yeni challange'ın kilidi açıldı.mp3"
+};
+Object.entries(_sfxUrls).forEach(([k,url])=>{
+  fetch(url).then(r=>r.arrayBuffer()).then(b=>_ac.decodeAudioData(b,buf=>{SFX[k]=buf}));
 });
+document.addEventListener('touchstart',()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
+document.addEventListener('mousedown', ()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 function playSound(k){
   if(!SFX[k]) return;
-  if(_ac.state==='suspended') _ac.resume();
-  const s=_ac.createBufferSource();
-  s.buffer=SFX[k];
-  s.connect(_ac.destination);
-  s.start(0);
+  const play=()=>{const s=_ac.createBufferSource();s.buffer=SFX[k];s.connect(_ac.destination);s.start(0)};
+  _ac.state==='suspended'?_ac.resume().then(play):play();
 }
 
 /* ═══════════════════════════════════════════
