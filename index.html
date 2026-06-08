@@ -436,7 +436,7 @@ Object.entries(_sfxUrls).forEach(([k,url])=>{
 document.addEventListener('touchstart',()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 document.addEventListener('mousedown', ()=>{if(_ac.state==='suspended')_ac.resume()},{once:true});
 let _muted = localStorage.getItem('cf-muted')==='1';
-const _sfxGain={decoy:0.5};
+const _sfxGain={decoy:0.25,match:0.25};
 function playSound(k){
   if(_muted||!SFX[k]) return;
   const play=()=>{
