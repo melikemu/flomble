@@ -32,40 +32,75 @@
       margin: 36px 0 12px;
     }
     p { color: #AEAEB2; margin-bottom: 12px; }
+    ul { color: #AEAEB2; margin-bottom: 12px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
     a { color: #007AFF; text-decoration: none; }
     a:hover { text-decoration: underline; }
     hr { border: none; border-top: 1px solid #1C1C1E; margin: 48px 0; }
+    .highlight { color: #E5E5EA; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="meta">Flomble &nbsp;·&nbsp; Last updated: June 9, 2026 &nbsp;·&nbsp; Melike Mühür</p>
+    <p class="meta">Flomble &nbsp;·&nbsp; Last updated: June 24, 2026 &nbsp;·&nbsp; Melike Mühür</p>
 
-    <p>Flomble is a color memory game. This policy explains what data the app does and does not collect.</p>
+    <p>Flomble is a color memory game. This policy describes what information the app collects, why, and how it is used.</p>
 
-    <h2>Data We Do Not Collect</h2>
-    <p>Flomble does not collect, store, or transmit any personal information. The app does not require an account, does not connect to the internet, and does not share any data with third parties.</p>
+    <h2>Information Stored on Your Device</h2>
+    <p>Flomble saves the following data locally on your device using AsyncStorage. This data is not shared with any third party and is used solely to provide the app's functionality.</p>
+    <ul>
+      <li><span class="highlight">Game progress</span> — completed levels, star ratings, and lifetime match count.</li>
+      <li><span class="highlight">Daily resources</span> — lives, joker uses, and daily reset timestamps. These reset each day and are never sent off-device.</li>
+      <li><span class="highlight">Streak and challenge history</span> — your current streak and daily challenge results, stored locally.</li>
+      <li><span class="highlight">League data</span> — your weekly points and league tier. The leaderboard you see is populated with computer-generated players; no real player data is collected or shared at this stage.</li>
+      <li><span class="highlight">Display name</span> — an optional name you choose for the in-app leaderboard. This name is stored locally on your device. It is not linked to your identity and is never transmitted to external servers.</li>
+      <li><span class="highlight">Settings</span> — your preferences such as language, dark mode, card design, text size, and sound options.</li>
+    </ul>
 
-    <h2>Data Stored on Your Device</h2>
-    <p>Flomble saves two pieces of information locally on your device using your browser's localStorage:</p>
-    <p><strong style="color:#E5E5EA;">Level progress</strong> — which levels you have completed and your star ratings. This is stored under the key <code style="color:#30D158;">cf-prog</code>.</p>
-    <p><strong style="color:#E5E5EA;">Sound preference</strong> — whether you have muted the game. This is stored under the key <code style="color:#30D158;">cf-muted</code>.</p>
-    <p>This data never leaves your device and can be cleared at any time by clearing your app data in your device settings.</p>
+    <h2>Advertising</h2>
+    <p>Flomble uses Google AdMob to display advertisements. AdMob is a third-party service operated by Google LLC. When ads are shown, AdMob may collect certain information automatically, including:</p>
+    <ul>
+      <li>Device identifiers (such as Advertising ID)</li>
+      <li>IP address and general location (country/region level)</li>
+      <li>Device type, operating system, and language</li>
+      <li>Ad interaction data (views and taps)</li>
+    </ul>
+    <p>This data is collected and processed by Google under their own privacy policy, available at <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a>. You can opt out of personalized advertising through your device settings (Android: Settings → Google → Ads).</p>
+    <p>Users who purchase the "Remove Ads" in-app purchase will not be shown any advertisements.</p>
 
-    <h2>Permissions</h2>
-    <p>Flomble does not request any device permissions. It does not access your camera, microphone, location, contacts, or any other device feature.</p>
+    <h2>In-App Purchases</h2>
+    <p>Flomble offers a one-time "Remove Ads" purchase through the Google Play Store. All payment processing is handled entirely by Google. Flomble does not collect or store any payment information.</p>
 
-    <h2>Children</h2>
-    <p>Flomble does not collect any data from anyone, including children under the age of 13.</p>
+    <h2>Optional Research Participation</h2>
+    <p>Flomble includes an optional feature that contributes anonymous gameplay data to color perception research. This feature is <span class="highlight">off by default</span> and only activates if you explicitly choose to participate when prompted in the app.</p>
+    <p>If you opt in, the following anonymous data may be sent to our secure servers:</p>
+    <ul>
+      <li>Which color pairs were shown and whether they were matched correctly</li>
+      <li>Response time for each card selection (in milliseconds)</li>
+      <li>A randomly generated anonymous identifier (no name, email, or account)</li>
+    </ul>
+    <p>This data contains no personal information and cannot be used to identify you. It is used solely to understand color perception patterns. You can withdraw your participation at any time through the app's Settings screen.</p>
+
+    <h2>Internet Connection</h2>
+    <p>Flomble connects to the internet for two purposes: to display advertisements (AdMob) and, if you have opted in, to submit anonymous research data. The core gameplay — levels, progress, and daily challenges — works entirely offline.</p>
+
+    <h2>Children's Privacy</h2>
+    <p>Flomble is rated for users aged 4 and older. We do not knowingly collect personal information from children under the age of 13. The optional research participation feature is designed to collect only anonymous, non-personal gameplay events. If a parent or guardian believes their child has submitted personal information, please contact us and we will promptly delete it.</p>
+
+    <h2>Data Retention and Deletion</h2>
+    <p>All data stored locally on your device can be deleted at any time by uninstalling the app or clearing the app's data through your device settings. If you participated in the optional research feature, anonymous event data stored on our servers does not contain any identifier that could be used to locate or delete your specific records.</p>
+
+    <h2>Your Rights (EEA and UK Users)</h2>
+    <p>If you are located in the European Economic Area or United Kingdom, you have rights under the General Data Protection Regulation (GDPR) including the right to access, correct, or delete your data. Since Flomble collects no personal data without your explicit consent, there is generally no personal data for us to provide or delete. For any questions, please contact us at the address below.</p>
 
     <h2>Changes to This Policy</h2>
-    <p>If this policy changes, the updated version will be published at this URL with a revised date.</p>
+    <p>If this policy changes, the updated version will be published at this URL with a revised date. Significant changes will be communicated within the app where possible.</p>
 
     <hr>
 
     <h2>Contact</h2>
-    <p>Questions about this policy can be sent to <a href="mailto:flowsnotframes@gmail.com">flowsnotframes@gmail.com</a>.</p>
+    <p>Questions or concerns about this policy can be sent to <a href="mailto:lowsnotframes@gmail.com">lowsnotframes@gmail.com</a>.</p>
   </div>
 </body>
 </html>
